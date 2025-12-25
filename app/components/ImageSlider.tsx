@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface ImageSliderProps {
   images: string[];
@@ -10,16 +10,59 @@ export default function ImageSlider({ images }: ImageSliderProps) {
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [imageLoading, setImageLoading] = useState<Record<number, boolean>>({});
   const sliderRef = useRef<HTMLDivElement>(null);
+  const [extendedImages, setExtendedImages] = useState<string[]>([]);
 
-  // Initialize loading state for all images
   useEffect(() => {
-    const initialLoading: Record<number, boolean> = {};
-    images.forEach((_, index) => {
-      initialLoading[index] = true;
-    });
-    setImageLoading(initialLoading);
-    setImageErrors({});
+    if (images && images.length > 0) {
+      // Create infinite scroll by duplicating images
+      const duplicated = [...images, ...images, ...images];
+      setExtendedImages(duplicated);
+      
+      // Initialize loading state for all images
+      const loadingState: Record<number, boolean> = {};
+      duplicated.forEach((_, idx) => {
+        loadingState[idx] = true;
+      });
+      setImageLoading(loadingState);
+    }
   }, [images]);
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider || extendedImages.length === 0) return;
+
+    const handleScroll = () => {
+      const slideWidth = 280;
+      const gap = 12;
+      const itemWidth = slideWidth + gap;
+      const scrollLeft = slider.scrollLeft;
+      const maxScroll = slider.scrollWidth - slider.clientWidth;
+      const sectionWidth = images.length * itemWidth;
+
+      // When scrolling right past the second set
+      if (scrollLeft >= sectionWidth * 2 - itemWidth) {
+        slider.scrollLeft = sectionWidth;
+      }
+      // When scrolling left before the first set
+      else if (scrollLeft <= itemWidth) {
+        slider.scrollLeft = sectionWidth + itemWidth;
+      }
+    };
+
+    slider.addEventListener('scroll', handleScroll);
+    
+    // Start at the middle section
+    setTimeout(() => {
+      if (slider) {
+        const slideWidth = 280;
+        const gap = 12;
+        const itemWidth = slideWidth + gap;
+        slider.scrollLeft = images.length * itemWidth;
+      }
+    }, 100);
+
+    return () => slider.removeEventListener('scroll', handleScroll);
+  }, [extendedImages, images.length]);
 
   const handleImageError = (index: number) => {
     setImageErrors(prev => ({ ...prev, [index]: true }));
@@ -30,154 +73,72 @@ export default function ImageSlider({ images }: ImageSliderProps) {
     setImageLoading(prev => ({ ...prev, [index]: false }));
   };
 
-  const scrollToNext = () => {
-    if (sliderRef.current) {
-      const slideWidth = 320;
-      const gap = 16;
-      const scrollAmount = slideWidth + gap;
-      sliderRef.current.scrollBy({ 
-        left: scrollAmount, 
-        behavior: 'smooth' 
-      });
-    }
-  };
-
-  const scrollToPrev = () => {
-    if (sliderRef.current) {
-      const slideWidth = 320;
-      const gap = 16;
-      const scrollAmount = slideWidth + gap;
-      sliderRef.current.scrollBy({ 
-        left: -scrollAmount, 
-        behavior: 'smooth' 
-      });
-    }
-  };
-
   if (!images || images.length === 0) {
     return (
-      <section className="mb-16">
-        <h3 className="text-2xl font-black uppercase tracking-tight mb-8 border-b-4 border-black pb-4">
+      <section className="mb-6">
+        <h3 className="text-lg font-bold uppercase tracking-tight mb-3 border-b-2 border-black pb-2 text-black">
           Image Gallery
         </h3>
-        <div className="text-center py-12 text-gray-500">
-          <p>No images to display</p>
+        <div className="text-center py-6 text-gray-400">
+          <p className="text-sm">No images to display</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="mb-16">
-      <h3 className="text-2xl font-black uppercase tracking-tight mb-8 border-b-4 border-black pb-4">
+    <section className="mb-6">
+      <h3 className="text-lg font-bold uppercase tracking-tight mb-3 border-b-2 border-black pb-2 text-black">
         Image Gallery
       </h3>
       <div className="relative">
-        {/* Navigation buttons */}
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={scrollToPrev}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all duration-200 z-20 shadow-lg hover:scale-110"
-              type="button"
-              aria-label="Previous image"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={scrollToNext}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all duration-200 z-20 shadow-lg hover:scale-110"
-              type="button"
-              aria-label="Next image"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
-        )}
-
-        {/* Scrollable container */}
         <div
           ref={sliderRef}
-          className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide"
+          className="flex overflow-x-auto gap-3 pb-3 scrollbar-hide cursor-grab active:cursor-grabbing"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
-            scrollSnapType: 'x mandatory',
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          {images.map((image, index) => (
+          {extendedImages.map((image, index) => (
             <div
-              key={`image-${index}-${image}`}
-              className="flex-shrink-0 w-80 h-64 bg-gray-100 rounded-lg overflow-hidden group relative shadow-lg hover:shadow-xl transition-shadow duration-300"
-              style={{ scrollSnapAlign: 'start' }}
+              key={`image-${index}`}
+              className="flex-shrink-0 w-70 h-52 bg-gray-50 overflow-hidden relative border border-gray-200 transition-opacity duration-300"
+              style={{ 
+                boxShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                opacity: imageLoading[index] ? 0.5 : 1
+              }}
             >
               {imageErrors[index] ? (
-                <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50">
-                  <div className="text-center text-gray-500 p-4">
-                    <svg className="w-16 h-16 mx-auto mb-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                  <div className="text-center text-gray-400 p-3">
+                    <svg className="w-10 h-10 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
-                    <p className="text-sm font-semibold mb-1">Image failed to load</p>
-                    <p className="text-xs text-gray-400 break-all px-2">{image}</p>
-                    <button 
-                      onClick={() => {
-                        setImageErrors(prev => ({ ...prev, [index]: false }));
-                        setImageLoading(prev => ({ ...prev, [index]: true }));
-                      }}
-                      className="mt-2 px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs transition-colors"
-                    >
-                      Retry
-                    </button>
+                    <p className="text-xs">Failed to load</p>
                   </div>
                 </div>
               ) : (
                 <>
                   {imageLoading[index] && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-blue-500 mb-3"></div>
-                        <p className="text-sm text-gray-600 font-medium">Loading image...</p>
-                      </div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
+                      <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
                     </div>
                   )}
                   <img
                     src={image}
-                    alt={`Gallery image ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    alt={`Gallery image ${(index % images.length) + 1}`}
+                    className="w-full h-full object-cover select-none"
                     onLoad={() => handleImageLoad(index)}
                     onError={() => handleImageError(index)}
                     draggable={false}
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end">
-                    <div className="p-4 text-white">
-                      <p className="text-sm font-bold">Image {index + 1}</p>
-                      <p className="text-xs opacity-90">Click to view full size</p>
-                    </div>
-                  </div>
                 </>
               )}
             </div>
           ))}
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="flex justify-center mt-6">
-          <div className="text-sm text-gray-600 bg-gray-100 px-6 py-3 rounded-full border border-gray-200 shadow-sm">
-            <span className="font-bold text-black">{images.length}</span> 
-            <span className="mx-1">image{images.length !== 1 ? 's' : ''}</span>
-            {images.length > 1 && (
-              <>
-                <span className="mx-2 text-gray-400">•</span>
-                <span className="text-gray-500">Scroll to navigate</span>
-              </>
-            )}
-          </div>
         </div>
       </div>
 

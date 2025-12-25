@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Groq from 'groq-sdk';
+import config from '../../../api/config.json';
 
-// Use server-side only environment variables (no NEXT_PUBLIC_ prefix)
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -14,7 +14,6 @@ const groq = new Groq({
 
 const API_SECRET_KEY = process.env.API_SECRET_KEY;
 
-// Types
 interface EventDetails {
   location: string;
   details: string;
@@ -47,7 +46,6 @@ interface ScrapedData {
   images: string[];
 }
 
-// Enhanced JSON template for comprehensive detailed extraction
 const EVENT_DETAILS_TEMPLATE = {
   location: "string - Detailed location information including city, state/province, country, specific venues, addresses, and geographical context",
   details: "string - Comprehensive detailed narrative of what happened, including background context, sequence of events, circumstances leading up to the incident, what specifically occurred, immediate aftermath, ongoing developments, legal proceedings, investigations, evidence found, witness testimonies, official statements, media coverage details, public reactions, and all significant aspects of the event",
@@ -56,7 +54,6 @@ const EVENT_DETAILS_TEMPLATE = {
   timeline: ["array of strings - Comprehensive chronological sequence of events with specific dates, times, and detailed descriptions of what happened at each stage, including pre-incident events, the main incident phases, immediate response, investigation milestones, legal proceedings, and ongoing developments"]
 };
 
-// Utility Functions
 function isValidJSON(str: string): boolean {
   try {
     JSON.parse(str);
@@ -71,21 +68,16 @@ function isHTMLResponse(response: string): boolean {
          response.trim().toLowerCase().startsWith('<html');
 }
 
-// Enhanced content extraction - increased size for more details
 function extractArticleContent(html: string, url: string): ScrapedArticle {
-  // Remove script and style tags
   let cleanHtml = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   cleanHtml = cleanHtml.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
   
-  // Extract title
   const titleMatch = cleanHtml.match(/<title[^>]*>([^<]+)<\/title>/i);
   const title = titleMatch ? titleMatch[1].trim() : '';
   
-  // Extract meta description
   const metaDescMatch = cleanHtml.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
   const metaContent = metaDescMatch ? metaDescMatch[1] : '';
   
-  // Extract text content from common article tags
   const articleMatches = cleanHtml.match(/<(?:article|main|div[^>]*class=["'][^"']*(?:content|article|post|story|news)[^"']*["'])[^>]*>([\s\S]*?)<\/(?:article|main|div)>/gi);
   let content = '';
   
@@ -94,7 +86,6 @@ function extractArticleContent(html: string, url: string): ScrapedArticle {
     content = longestMatch.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   }
   
-  // Fallback: extract paragraph content
   if (!content || content.length < 200) {
     const paragraphs = cleanHtml.match(/<p[^>]*>([^<]+)<\/p>/gi);
     if (paragraphs) {
@@ -102,7 +93,6 @@ function extractArticleContent(html: string, url: string): ScrapedArticle {
     }
   }
   
-  // Enhanced: extract div content with text
   if (!content || content.length < 200) {
     const divMatches = cleanHtml.match(/<div[^>]*>([^<]*(?:<[^\/][^>]*>[^<]*<\/[^>]*>[^<]*)*)<\/div>/gi);
     if (divMatches) {
@@ -113,7 +103,6 @@ function extractArticleContent(html: string, url: string): ScrapedArticle {
     }
   }
   
-  // Final fallback: use meta description
   if (!content || content.length < 100) {
     content = metaContent;
   }
@@ -123,18 +112,17 @@ function extractArticleContent(html: string, url: string): ScrapedArticle {
   return {
     url,
     title,
-    content: content.substring(0, 4000), // Increased from 2000 to 4000 characters for more detail
+    content: content.substring(0, 4000),
     publishDate: '',
     author: '',
     source
   };
 }
 
-// Enhanced scraping with longer timeout for better content extraction
 async function scrapeArticle(url: string): Promise<ScrapedArticle | null> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000); // Increased from 8 to 12 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
     
     const response = await fetch(url, {
       headers: {
@@ -162,7 +150,6 @@ async function scrapeArticle(url: string): Promise<ScrapedArticle | null> {
   }
 }
 
-// Enhanced image search with better filtering
 async function searchImages(query: string): Promise<string[]> {
   const API_KEY = process.env.GOOGLE_API_KEY;
   const SEARCH_ENGINE_ID = process.env.GOOGLE_SEARCH_ENGINE_ID;
@@ -224,7 +211,7 @@ async function searchImages(query: string): Promise<string[]> {
                (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png') || 
                 url.includes('.webp') || url.includes('.gif') || url.includes('image'));
       })
-      .slice(0, 10); // Increased from 8 to 10
+      .slice(0, 10);
 
     console.log(`Found ${imageLinks.length} valid image links`);
     return imageLinks;
@@ -235,7 +222,6 @@ async function searchImages(query: string): Promise<string[]> {
   }
 }
 
-// Enhanced Google Search - increased results for more comprehensive data
 async function searchGoogleAndScrape(query: string): Promise<ScrapedData> {
   const API_KEY = process.env.GOOGLE_API_KEY;
   const SEARCH_ENGINE_ID = process.env.GOOGLE_SEARCH_ENGINE_ID;
@@ -247,7 +233,6 @@ async function searchGoogleAndScrape(query: string): Promise<ScrapedData> {
   try {
     const allResults: GoogleSearchResult[] = [];
 
-    // Increased from 2 to 3 batches to get 30 results for more comprehensive coverage
     for (let page = 1; page <= 3; page++) {
       const startIndex = (page - 1) * 10 + 1;
       
@@ -303,7 +288,6 @@ async function searchGoogleAndScrape(query: string): Promise<ScrapedData> {
 
     console.log(`Total search results: ${allResults.length}`);
 
-    // Filter results and remove duplicates
     const filteredResults = allResults.filter((result, index, self) => {
       const isDuplicate = index !== self.findIndex(r => r.link === result.link);
       if (isDuplicate) return false;
@@ -319,7 +303,6 @@ async function searchGoogleAndScrape(query: string): Promise<ScrapedData> {
 
     console.log(`Filtered to ${filteredResults.length} valid results`);
 
-    // Increased from 12 to 18 articles to scrape for more comprehensive analysis
     const articlesToScrape = filteredResults.slice(0, 18);
     console.log(`Scraping content from ${articlesToScrape.length} articles...`);
     
@@ -331,11 +314,10 @@ async function searchGoogleAndScrape(query: string): Promise<ScrapedData> {
         result.status === 'fulfilled' && result.value !== null
       )
       .map(result => result.value)
-      .filter(article => article.content.length > 100); // Increased minimum content length
+      .filter(article => article.content.length > 100);
 
     console.log(`Successfully scraped ${successfulArticles.length} articles`);
 
-    // Search for images
     const imageLinks = await searchImages(query);
     console.log(`Found ${imageLinks.length} image URLs`);
 
@@ -351,16 +333,13 @@ async function searchGoogleAndScrape(query: string): Promise<ScrapedData> {
   }
 }
 
-// Significantly enhanced Groq processing for detailed comprehensive analysis
 async function processArticlesWithGroq(scrapedData: ScrapedData, query: string): Promise<Omit<EventDetails, 'images' | 'sources'>> {
-  // Process more articles for comprehensive analysis
   const topArticles = scrapedData.articles
     .sort((a, b) => b.content.length - a.content.length)
-    .slice(0, 15); // Increased from 8 to 15 articles
+    .slice(0, 15);
 
   const articleContent = topArticles.map((article, index) => {
-    // Increased content per article for more detailed analysis
-    const contentToUse = article.content.substring(0, 3500); // Increased from 1500 to 3500
+    const contentToUse = article.content.substring(0, 3500);
     return `
 === ARTICLE ${index + 1}: ${article.source.toUpperCase()} ===
 Title: ${article.title}
@@ -369,92 +348,46 @@ Content: ${contentToUse}
 ---`;
   }).join('\n\n');
 
-  // Include more snippets for additional context
   const topSnippets = scrapedData.results
-    .slice(0, 10) // Increased from 5 to 10 snippets
+    .slice(0, 10)
     .map((result, index) => `${index + 1}. [${result.displayLink}] ${result.title}: ${result.snippet}`)
     .join('\n');
 
-  // Enhanced prompt for comprehensive detailed extraction
-  const prompt = `
-You are an expert investigative analyst and researcher. Your task is to conduct a comprehensive, detailed analysis of the provided content about: "${query}"
+  const prompt = `Extract *exhaustive and comprehensive* structured information about: "${query}"
 
-MAIN ARTICLES FOR ANALYSIS:
+ARTICLES:
 ${articleContent}
 
-ADDITIONAL REFERENCE SNIPPETS:
+SNIPPETS:
 ${topSnippets}
 
-INSTRUCTIONS FOR COMPREHENSIVE DETAILED EXTRACTION:
-1. Extract ALL available information with maximum detail and depth
-2. Provide comprehensive, thorough descriptions and explanations
-3. Include background context, circumstances, and all relevant details
-4. For each field, extract as much detailed information as possible
-5. Be extremely thorough and comprehensive in your analysis
-6. Include specific details like dates, times, locations, names, positions, relationships
-7. Provide detailed descriptions of events, processes, and outcomes
-8. Include quotes, statements, and specific facts when available
-9. Ensure chronological accuracy and detailed timeline information
-10. Extract comprehensive victim and accused information with full context
+*CRITICAL: Extract MAXIMUM detail for EVERY field. Your response must be extremely thorough, comprehensive, and packed with ALL available information.*
 
-DETAILED FIELD REQUIREMENTS:
+*LOCATION*: Extract *complete geographical context* including exact addresses, specific venue names, building details, city, state/province, country, regional context, nearby landmarks, facility descriptions, and any location-specific circumstances. *Be exhaustive*.
 
-LOCATION: Extract detailed geographical information including specific addresses, venues, cities, states, countries, regional context, nearby landmarks, facility names, building details, and any location-specific circumstances or significance.
+*DETAILS*: Provide an *extensive, comprehensive narrative* covering: complete background and historical context, detailed circumstances leading to the event, step-by-step chronological sequence of what happened, *all parties involved* with their roles and relationships, *specific actions and decisions* made by each party, *detailed investigation findings* and evidence discovered, *complete legal proceedings* including charges and court information, *all official statements* and press releases, *witness testimonies* and accounts, *media coverage specifics*, *public reactions* and social impact, *current ongoing status*, *consequences and impact* on all parties, *any controversies or disputes*, and *conflicting information* if present. *Include specific quotes, statistics, and facts wherever available*. This section should be the *most detailed and comprehensive* part of your response.
 
-DETAILS: Provide a comprehensive, detailed narrative that includes:
-- Complete background and context leading to the event
-- Detailed sequence of what happened step by step
-- Specific circumstances, conditions, and factors involved
-- All parties involved and their roles/relationships
-- Detailed description of actions taken and decisions made
-- Investigation details, evidence found, and analysis
-- Legal proceedings, charges, and court information
-- Official statements, press releases, and public communications
-- Media coverage details and public reactions
-- Current status and ongoing developments
-- Impact and consequences for all parties involved
-- Any controversies, disputes, or conflicting information
+*ACCUSED*: List *ALL individuals, organizations, or entities* with: complete full names and any known aliases, exact positions and titles held, professional background and history, *detailed description of their involvement* and role in the incident, *specific charges or allegations* against them, relevant background information, *their responses or statements*, current legal status, and *any additional context* about each party.
 
-ACCUSED: List all individuals, organizations, companies, or entities with comprehensive details including:
-- Full names and any aliases or alternative spellings
-- Positions, titles, roles, and professional background
-- Relationship to the incident and specific involvement
-- Charges or allegations against them
-- Background information and relevant history
-- Current status and any statements made
+*VICTIMS*: Provide *comprehensive information* about all affected parties including: full names where available, ages and demographic details, personal background information, *detailed description of harm or impact suffered*, current condition and status, *their relationship to the incident*, how they were specifically affected, *statements from victims or families*, and *ongoing impact* on their lives.
 
-VICTIMS: Provide detailed information about all affected parties including:
-- Full names and demographic information where available
-- Ages, backgrounds, and personal circumstances
-- Nature and extent of impact or harm suffered
-- Current condition and status
-- Relationship to the incident and how they were affected
-- Any statements or reactions from victims or families
+*TIMELINE*: Create an *extremely detailed chronological sequence* with: exact dates and specific times when available, *comprehensive descriptions of what occurred at each stage*, pre-incident background events and context, *step-by-step progression* of the main incident with granular detail, immediate response and emergency actions, *investigation milestones* with dates, *legal proceedings timeline* including court dates and decisions, media coverage evolution, public reaction timeline, and *all ongoing developments*. Each timeline entry should be *highly descriptive* with multiple sentences explaining what happened.
 
-TIMELINE: Create a comprehensive chronological sequence with specific details:
-- Exact dates and times when possible
-- Detailed description of what happened at each stage
-- Pre-incident events and background circumstances
-- Step-by-step progression of the main incident
-- Immediate response and aftermath
-- Investigation milestones and discoveries
-- Legal proceedings and court dates
-- Media coverage and public reaction timeline
-- Ongoing developments and current status
+*EXTRACTION REQUIREMENTS*:
+- *Maximize information density* in every field
+- Include *specific names, dates, times, places, and numbers*
+- Use *direct quotes* from sources when impactful
+- Provide *extensive detail* rather than summaries
+- Extract *ALL available information* from the articles
+- Be *thorough and comprehensive* above all else
+- *Details field should be 1000+ words* when sufficient source material exists
+- *Timeline should have 10+ detailed entries* when information is available
 
-Return ONLY a valid JSON object following this exact template structure:
+Return *ONLY* valid JSON matching this structure:
 
 ${JSON.stringify(EVENT_DETAILS_TEMPLATE, null, 2)}
 
-CRITICAL REQUIREMENTS:
-- Use ONLY information explicitly stated in the provided content
-- Be maximally detailed and comprehensive within the available information
-- Ensure proper JSON formatting with no syntax errors
-- If specific information is not available, use empty strings or arrays
-- Focus on accuracy while maximizing detail extraction
-- Include specific quotes, names, dates, and facts when available
-
-JSON Response:`;
+Use *only explicit information* from provided content. *Maximize detail extraction* while maintaining accuracy. Use empty strings/arrays only when data is genuinely unavailable.`;
 
   try {
     const completion = await groq.chat.completions.create({
@@ -464,9 +397,9 @@ JSON Response:`;
           content: prompt,
         },
       ],
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.1, // Keep low for factual accuracy
-      max_tokens: 8000, // Significantly increased from 3000 to 8000 for detailed responses
+      model: config.groq.model,
+      temperature: config.groq.temperature,
+      max_tokens: config.groq.max_tokens,
     });
 
     const response = completion.choices[0]?.message?.content;
@@ -474,7 +407,6 @@ JSON Response:`;
       throw new Error('No response from Groq API');
     }
 
-    // Clean and parse JSON response
     const cleanedResponse = response.trim();
     const jsonStart = cleanedResponse.indexOf('{');
     const jsonEnd = cleanedResponse.lastIndexOf('}') + 1;
@@ -492,7 +424,6 @@ JSON Response:`;
 
     const parsedData = JSON.parse(jsonString);
     
-    // Validate and ensure required fields exist
     const requiredFields: (keyof Omit<EventDetails, 'images' | 'sources'>)[] = ['location', 'details', 'accused', 'victims', 'timeline'];
     for (const field of requiredFields) {
       if (!(field in parsedData)) {
@@ -508,7 +439,6 @@ JSON Response:`;
   }
 }
 
-// Database Operations (unchanged for compatibility)
 async function fetchEventFromDatabase(event_id: string) {
   const { data: eventData, error: fetchError } = await supabase
     .from('events')
@@ -533,7 +463,6 @@ async function saveEventDetails(event_id: string, structuredData: EventDetails) 
   console.log(`- Sources: ${structuredData.sources.length}`);
   console.log(`- Images: ${structuredData.images.length}`);
 
-  // Check if record exists
   const { data: existingDetails, error: checkError } = await supabase
     .from('event_details')
     .select('event_id')
@@ -596,16 +525,13 @@ async function updateEventTimestamp(event_id: string) {
   }
 }
 
-// Main processing function (enhanced for detailed processing)
 async function processEvent(event_id: string) {
   console.log(`Processing event for detailed analysis: ${event_id}`);
 
-  // Fetch event data
   const eventData = await fetchEventFromDatabase(event_id);
   console.log(`Event: ${eventData.title}`);
   console.log(`Query: ${eventData.query}`);
 
-  // Search and scrape with enhanced coverage
   console.log('Conducting comprehensive search and scraping...');
   const scrapedData = await searchGoogleAndScrape(eventData.query);
 
@@ -615,11 +541,9 @@ async function processEvent(event_id: string) {
 
   console.log(`Scraped ${scrapedData.articles.length} articles and found ${scrapedData.images.length} images for detailed analysis`);
 
-  // Process with Groq for detailed analysis
   console.log('Processing with Groq for comprehensive detailed analysis...');
   const analyzedData = await processArticlesWithGroq(scrapedData, eventData.query);
 
-  // Combine data with enhanced source tracking
   const scrapedSourceUrls = scrapedData.articles
     .filter(article => article.url && article.content.length > 100)
     .map(article => article.url);
@@ -636,7 +560,6 @@ async function processEvent(event_id: string) {
   console.log(`Accused parties: ${structuredData.accused.length}`);
   console.log(`Victims: ${structuredData.victims.length}`);
 
-  // Save to database
   await saveEventDetails(event_id, structuredData);
   await updateEventTimestamp(event_id);
 
@@ -649,7 +572,6 @@ async function processEvent(event_id: string) {
   };
 }
 
-// GET endpoint (unchanged for compatibility)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -703,7 +625,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST endpoint (unchanged for compatibility)
 export async function POST(request: NextRequest) {
   try {
     const { event_id } = await request.json();

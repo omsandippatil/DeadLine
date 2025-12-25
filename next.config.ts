@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -7,10 +8,9 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
-    // You can also tweak formats here if needed
     formats: ['image/avif', 'image/webp'],
   },
-  webpack: (config) => {
+  webpack: (config: any) => {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
@@ -19,4 +19,5 @@ const nextConfig: NextConfig = {
     return config;
   },
 };
+
 export default nextConfig;
