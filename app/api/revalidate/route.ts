@@ -1,4 +1,4 @@
- import { revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -6,14 +6,14 @@ export async function GET(request: NextRequest) {
   const api_key = searchParams.get('api_key');
   const event_id = searchParams.get('event_id');
 
-   if (!api_key || api_key !== process.env.API_SECRET_KEY) {
+  if (!api_key || api_key !== process.env.API_SECRET_KEY) {
     return NextResponse.json(
       { success: false, message: 'Invalid API key' },
       { status: 401 }
     );
   }
 
-   if (!event_id) {
+  if (!event_id) {
     return NextResponse.json(
       { success: false, message: 'event_id is required' },
       { status: 400 }
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    revalidateTag(`event-${event_id}`);
-    revalidateTag(`event-updates-${event_id}`);
+    revalidateTag(`event-${event_id}`, 'page');
+    revalidateTag(`event-updates-${event_id}`, 'page');
 
     return NextResponse.json({
       success: true,
