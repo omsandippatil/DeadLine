@@ -171,8 +171,8 @@ export default async function EventPage({
     
     if (resolvedSearchParams.api_key === apiKey) {
       const { revalidateTag } = await import('next/cache');
-      revalidateTag(`event-${id}`);
-      revalidateTag(`event-updates-${id}`);
+      await revalidateTag(`event-${id}`);
+      await revalidateTag(`event-updates-${id}`);
     }
   }
 
