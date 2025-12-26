@@ -1,8 +1,6 @@
-'use client';
-
-import { useEffect, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { EventsClient } from './events-client';
 
 interface Event {
   event_id: number;
@@ -20,171 +18,52 @@ interface EventsResponse {
   events: Event[];
 }
 
-// Skeleton Loading Component
-function EventCardSkeleton() {
-  return (
-    <article className="animate-pulse">
-      <div className="relative h-64 mb-6 bg-gray-200"></div>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="h-3 bg-gray-200 w-24"></div>
-          <div className="h-6 bg-gray-200 w-20"></div>
-        </div>
-        <div className="space-y-2">
-          <div className="h-5 bg-gray-200 w-full"></div>
-          <div className="h-5 bg-gray-200 w-4/5"></div>
-        </div>
-        <div className="space-y-2">
-          <div className="h-3 bg-gray-200 w-full"></div>
-          <div className="h-3 bg-gray-200 w-full"></div>
-          <div className="h-3 bg-gray-200 w-3/4"></div>
-        </div>
-        <div className="flex gap-2">
-          <div className="h-6 bg-gray-200 w-16"></div>
-          <div className="h-6 bg-gray-200 w-20"></div>
-        </div>
-      </div>
-    </article>
-  );
+async function getEvents(): Promise<Event[]> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  
+  const response = await fetch(`${baseUrl}/api/get/events`, {
+    next: { 
+      tags: ['events-list'],
+      revalidate: 3600 // Cache for 1 hour
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch events');
+  }
+
+  const data: EventsResponse = await response.json();
+  return data.events;
 }
 
-export default function DeadlineEventsPage() {
-  const [allEvents, setAllEvents] = useState<Event[]>([]);
-  const [displayedEvents, setDisplayedEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const observerTarget = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+function formatDate(dateString: string | null) {
+  if (!dateString) return 'NO DATE';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  }).toUpperCase();
+}
 
-  const ITEMS_PER_PAGE = 30;
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch('/api/get/events');
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        const data: EventsResponse = await response.json();
-        setAllEvents(data.events);
-        setDisplayedEvents(data.events.slice(0, ITEMS_PER_PAGE));
-        setHasMore(data.events.length > ITEMS_PER_PAGE);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, []);
-
-  const loadMoreEvents = useCallback(() => {
-    if (loadingMore || !hasMore) return;
-
-    setLoadingMore(true);
-    setTimeout(() => {
-      const filteredEvents = allEvents.filter(event => {
-        const matchesFilter = activeFilter === 'All' || 
-          event.tags?.some(tag => tag.toLowerCase().includes(activeFilter.toLowerCase())) ||
-          event.status.toLowerCase().includes(activeFilter.toLowerCase());
-        return matchesFilter;
-      });
-
-      const nextPage = page + 1;
-      const startIndex = 0;
-      const endIndex = nextPage * ITEMS_PER_PAGE;
-      const newEvents = filteredEvents.slice(startIndex, endIndex);
-      
-      setDisplayedEvents(newEvents);
-      setPage(nextPage);
-      setHasMore(endIndex < filteredEvents.length);
-      setLoadingMore(false);
-    }, 500);
-  }, [allEvents, page, activeFilter, loadingMore, hasMore]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          loadMoreEvents();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [loadMoreEvents, hasMore, loadingMore]);
-
-  useEffect(() => {
-    const filteredEvents = allEvents.filter(event => {
-      const matchesFilter = activeFilter === 'All' || 
-        event.tags?.some(tag => tag.toLowerCase().includes(activeFilter.toLowerCase())) ||
-        event.status.toLowerCase().includes(activeFilter.toLowerCase());
-      return matchesFilter;
-    });
-
-    setDisplayedEvents(filteredEvents.slice(0, ITEMS_PER_PAGE));
-    setPage(1);
-    setHasMore(filteredEvents.length > ITEMS_PER_PAGE);
-  }, [activeFilter, allEvents]);
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'NO DATE';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).toUpperCase();
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'injustice':
-        return 'INJUSTICE';
-      case 'resolved':
-        return 'JUSTICE';
-      case 'pending':
-        return 'DEVELOPING';
-      default:
-        return status.toUpperCase();
-    }
-  };
-
-  const handleEventClick = (eventId: number) => {
-    router.push(`/event/${eventId}`);
-  };
-
-  const categories = ['All', 'Justice', 'Politics', 'Society', 'Breaking'];
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-black font-bold text-2xl mb-4 tracking-wide">ERROR</div>
-          <p className="text-black font-light">{error}</p>
-        </div>
-      </div>
-    );
+function getStatusLabel(status: string) {
+  switch (status.toLowerCase()) {
+    case 'injustice':
+      return 'INJUSTICE';
+    case 'resolved':
+      return 'JUSTICE';
+    case 'pending':
+      return 'DEVELOPING';
+    default:
+      return status.toUpperCase();
   }
+}
+
+export default async function DeadlineEventsPage() {
+  const events = await getEvents();
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Title */}
-      <section className="bg-white">
+       <section className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-16 text-center">
           <h1 className="text-6xl md:text-8xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
             DEADLINE
@@ -195,117 +74,9 @@ export default function DeadlineEventsPage() {
         </div>
       </section>
 
-      {/* Filter Bar */}
-      <section className="border-y border-black bg-white sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex flex-wrap gap-3 justify-center">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveFilter(category)}
-                className={`px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-200 font-mono ${
-                  activeFilter === category
-                    ? 'bg-black text-white'
-                    : 'bg-gray-100 text-black hover:bg-gray-200'
-                }`}
-              >
-                {category.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
+       <EventsClient initialEvents={events} />
 
-      {/* Content Grid */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {loading ? (
-            <>
-              {[...Array(6)].map((_, index) => (
-                <EventCardSkeleton key={index} />
-              ))}
-            </>
-          ) : (
-            displayedEvents.map((event) => (
-              <article 
-                key={event.event_id} 
-                onClick={() => handleEventClick(event.event_id)}
-                className="group cursor-pointer"
-              >
-                <div className="relative h-64 mb-6 overflow-hidden bg-gray-100">
-                  <Image
-                    src={event.image_url || '/api/placeholder/400/300'}
-                    alt={event.title}
-                    fill
-                    className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/api/placeholder/400/300';
-                    }}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-xs font-normal tracking-widest text-black font-mono">
-                    <time>{formatDate(event.incident_date)}</time>
-                    <span className="bg-black text-white px-2 py-1 tracking-wide">
-                      {getStatusLabel(event.status)}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-bold tracking-tight text-black leading-tight transition-colors text-justify" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                    {event.title}
-                  </h3>
-
-                  <p className="text-black font-normal leading-relaxed text-sm line-clamp-3 text-justify font-mono">
-                    {event.summary || 'Breaking story developing...'}
-                  </p>
-
-                  {event.tags && event.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {event.tags.slice(0, 2).map((tag, index) => (
-                        <span
-                          key={index}
-                          className="text-xs font-normal text-black border border-black px-2 py-1 tracking-wide font-mono"
-                        >
-                          {tag.toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-
-        {loadingMore && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-            {[...Array(6)].map((_, index) => (
-              <EventCardSkeleton key={`loading-${index}`} />
-            ))}
-          </div>
-        )}
-
-        <div ref={observerTarget} className="h-10" />
-
-        {displayedEvents.length === 0 && !loading && (
-          <div className="text-center py-24">
-            <div className="text-black font-normal tracking-wide text-lg font-mono">
-              NO STORIES MATCH YOUR FILTER
-            </div>
-            <button 
-              onClick={() => setActiveFilter('All')}
-              className="mt-4 text-black font-medium hover:text-gray-600 transition-colors font-mono"
-            >
-              VIEW ALL STORIES
-            </button>
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-black bg-white mt-24">
+       <footer className="border-t border-black bg-white mt-24">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="text-center">
             <h3 className="text-2xl font-black tracking-tight mb-4 text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>DEADLINE</h3>
