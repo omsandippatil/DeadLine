@@ -70,54 +70,63 @@ interface EventUpdatesResponse {
 }
 
 async function getEventDetails(id: string): Promise<EventDetails | null> {
-  const apiKey = process.env.API_SECRET_KEY;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  
-  if (!apiKey) {
-    console.error('API_SECRET_KEY not found in environment variables');
-    return null;
-  }
-
   try {
-    const response = await fetch(
-      `${baseUrl}/api/get/details?event_id=${id}&api_key=${apiKey}`,
-      {
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const apiKey = process.env.API_SECRET_KEY;
+    
+    if (!apiKey) {
+      console.error('[getEventDetails] API_SECRET_KEY not found');
+      return null;
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    if (!baseUrl) {
+      console.error('[getEventDetails] NEXT_PUBLIC_BASE_URL not found');
+      return null;
+    }
+
+    const url = `${baseUrl}/api/get/details?event_id=${id}&api_key=${apiKey}`;
+    console.log('[getEventDetails] Fetching:', url.replace(apiKey, 'REDACTED'));
+
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('[getEventDetails] Response status:', response.status);
 
     if (!response.ok) {
-      console.error(`Failed to fetch event details: ${response.status} ${response.statusText}`);
+      const text = await response.text();
+      console.error('[getEventDetails] Failed:', response.status, text);
       return null;
     }
 
     const result: EventDetailsResponse = await response.json();
+    console.log('[getEventDetails] Success:', result.success, 'Has data:', !!result.data);
     
     if (!result.success || !result.data) {
-      console.error('API returned success: false or no data');
+      console.error('[getEventDetails] Invalid response structure');
       return null;
     }
 
     return result.data;
   } catch (error) {
-    console.error('Error fetching event details:', error);
+    console.error('[getEventDetails] Exception:', error);
     return null;
   }
 }
 
 async function getEventUpdates(id: string): Promise<EventUpdate[]> {
-  const apiKey = process.env.API_SECRET_KEY;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  
-  if (!apiKey) {
-    console.error('API_SECRET_KEY not found in environment variables');
-    return [];
-  }
-
   try {
+    const apiKey = process.env.API_SECRET_KEY;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    if (!apiKey || !baseUrl) {
+      return [];
+    }
+
     const response = await fetch(
       `${baseUrl}/api/get/updates?event_id=${id}&api_key=${apiKey}`,
       {
@@ -129,14 +138,13 @@ async function getEventUpdates(id: string): Promise<EventUpdate[]> {
     );
 
     if (!response.ok) {
-      console.error(`Failed to fetch event updates: ${response.status} ${response.statusText}`);
       return [];
     }
 
     const result: EventUpdatesResponse = await response.json();
     return result.success && result.data ? result.data : [];
   } catch (error) {
-    console.error('Error fetching event updates:', error);
+    console.error('[getEventUpdates] Exception:', error);
     return [];
   }
 }
@@ -151,8 +159,15 @@ export default async function EventPage({
 }) {
   const id = params.id;
   
+  console.log('[EventPage] Rendering for ID:', id);
+  console.log('[EventPage] Environment check:', {
+    hasApiKey: !!process.env.API_SECRET_KEY,
+    hasBaseUrl: !!process.env.NEXT_PUBLIC_BASE_URL,
+    baseUrl: process.env.NEXT_PUBLIC_BASE_URL
+  });
+  
   if (!id) {
-    console.error('Invalid event ID:', id);
+    console.error('[EventPage] No ID provided');
     notFound();
   }
 
@@ -161,8 +176,10 @@ export default async function EventPage({
     getEventUpdates(id)
   ]);
 
+  console.log('[EventPage] Fetch complete. Has details:', !!eventDetails);
+
   if (!eventDetails) {
-    console.error('Event details not found for ID:', id);
+    console.error('[EventPage] No event details found, calling notFound()');
     notFound();
   }
 
