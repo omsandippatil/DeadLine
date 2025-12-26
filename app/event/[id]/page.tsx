@@ -151,29 +151,15 @@ export const dynamic = 'force-static';
 export const revalidate = false;
 
 export default async function EventPage({ 
-  params,
-  searchParams 
+  params 
 }: { 
   params: { id: string };
-  searchParams: { api_key?: string };
 }) {
   const { id } = await params;
-  const resolvedSearchParams = await searchParams;
   
   if (!id) {
     console.error('Invalid event ID:', id);
     notFound();
-  }
-
-  // Check if revalidation is triggered
-  if (resolvedSearchParams.api_key) {
-    const apiKey = process.env.API_SECRET_KEY;
-    
-    if (resolvedSearchParams.api_key === apiKey) {
-      const { revalidateTag } = await import('next/cache');
-      await revalidateTag(`event-${id}`);
-      await revalidateTag(`event-updates-${id}`);
-    }
   }
 
   const [eventDetails, eventUpdates] = await Promise.all([
