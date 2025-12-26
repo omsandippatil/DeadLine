@@ -6,11 +6,16 @@ interface GoogleSearchResult {
   fullContent?: string;
 }
 
-export function buildUpdateAnalysisPrompt(query: string, searchResults: GoogleSearchResult[], lastUpdateDate: string): string {
+export function buildUpdateAnalysisPrompt(
+  query: string, 
+  searchResults: GoogleSearchResult[], 
+  lastUpdateDate: string
+): string {
   const searchContent = searchResults.map((result, index) => 
     `Result ${index + 1}:
 Title: ${result.title}
 Snippet: ${result.snippet}
+Link: ${result.link}
 Published: ${result.publishedDate || 'Date not available'}
 Full Article Content:
 ${result.fullContent || 'Content not available'}
@@ -21,61 +26,70 @@ ${result.fullContent || 'Content not available'}
 
 Return ONLY valid JSON. Start with { and end with }.
 
+Expected JSON Structure:
 {
   "has_new_updates": true,
   "updates": [
     {
       "date": "YYYY-MM-DD",
-      "title": "Max 100 characters",
-      "description": "800-1000 characters",
-      "relevance_score": 8.5,
-      "key_insights": ["insight 1", "insight 2", "insight 3"],
-      "summary": "Max 200 characters",
-      "sources": ["url1", "url2"]
+      "title": "Concise headline summarizing the development",
+      "description": "Comprehensive narrative covering all key details, context, implications, and specific data points from the article"
     }
   ]
 }
 
-REQUIREMENTS:
+CRITICAL REQUIREMENTS:
 
-Read ALL full article content provided. Extract ONLY content published AFTER ${lastUpdateDate}.
+1. DATE FILTERING:
+   - Read ALL full article content provided
+   - Extract ONLY content published AFTER ${lastUpdateDate}
+   - If NO content after ${lastUpdateDate} exists, return: {"has_new_updates": false, "updates": []}
 
-Group findings by publication date. Create SEPARATE update object for EACH distinct date.
+2. DATE GROUPING:
+   - Group findings by publication date
+   - Create SEPARATE update object for EACH distinct date
+   - Each update represents ONE specific date only
+   - Sort updates chronologically from oldest to newest
 
-If NO content after ${lastUpdateDate} exists, return: {"has_new_updates": false, "updates": []}
+3. DATE FIELD:
+   - Must be YYYY-MM-DD format
+   - Must match the article's actual publication date
+   - Do NOT use generic dates or date ranges
 
-Each update represents ONE specific date only.
+4. TITLE FIELD:
+   - Must be newsworthy and specific to that date's development
+   - Should capture the most significant aspect of the update
+   - Be concise but informative
+   - Do NOT use generic titles like "Update for [Date]"
 
-Date field must be YYYY-MM-DD format matching article publication date.
+5. DESCRIPTION FIELD:
+   - Write a comprehensive narrative covering that date's developments
+   - Include specific data, facts, numbers, names, and timestamps
+   - Provide context and explain significance
+   - Discuss implications and potential impact
+   - Synthesize information from full article content published on that date
+   - Write in clear, professional prose
+   - Aim for thoroughness while maintaining readability
 
-Title must be newsworthy and specific to that date's development. Maximum 100 characters.
+6. CONTENT REQUIREMENTS:
+   - Do NOT combine multiple dates into one update
+   - Do NOT include information from before ${lastUpdateDate}
+   - Focus on changes, new developments, and specific events
+   - Use exact numbers, complete names, precise data points
+   - Include specific timestamps when available
+   - Properly escape quotes with backslash in JSON
 
-Description must be 800-1000 characters covering that date's developments only. Include specific data, facts, implications. Synthesize information from the full article content published on that date.
+7. QUALITY STANDARDS:
+   - Prioritize accuracy over quantity
+   - Ensure each update adds meaningful information
+   - Avoid speculation or assumptions
+   - Base all content on provided article text
+   - Maintain journalistic objectivity
 
-Relevance score must be 0-10 indicating significance of that date's updates.
+LAST UPDATE DATE: ${lastUpdateDate}
 
-Key insights must be 3-5 complete sentences covering distinct findings from that specific date.
-
-Summary must be under 200 characters providing quick overview of that date's updates.
-
-Sources array must list URLs of articles used for that specific date's update.
-
-Sort updates chronologically from oldest to newest.
-
-Do NOT combine multiple dates into one update.
-
-Do NOT include information from before ${lastUpdateDate}.
-
-Focus on changes, new developments, and specific events from each date.
-
-Use exact numbers, complete names, precise data points, specific timestamps from the full article content.
-
-Escape quotes with backslash.
-
-LAST UPDATE: ${lastUpdateDate}
-
-RESULTS:
+SEARCH RESULTS TO ANALYZE:
 ${searchContent}
 
-Return ONLY JSON.`;
+Return ONLY the JSON object. No preamble, no explanation, just the JSON.`;
 }

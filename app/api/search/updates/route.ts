@@ -34,10 +34,6 @@ interface DateUpdate {
   date: string;
   title: string;
   description: string;
-  relevance_score: number;
-  key_insights: string[];
-  summary: string;
-  sources: string[];
 }
 
 interface GroqAnalysisResponse {
@@ -50,8 +46,6 @@ interface UpdateRecord {
   title: string;
   description: string;
   update_date: string;
-  relevance_score: number;
-  sources: string[];
 }
 
 interface DebugInfo {
@@ -269,11 +263,9 @@ async function processEventUpdate(event_id: string, apiKey: string) {
     
     const updateRecords: UpdateRecord[] = analysis.updates.map(update => ({
       event_id: event.event_id,
-      title: update.title.substring(0, 100),
-      description: update.description.substring(0, 1000),
-      update_date: update.date,
-      relevance_score: update.relevance_score,
-      sources: update.sources
+      title: update.title,
+      description: update.description,
+      update_date: update.date
     }));
 
     const { data: insertData, error: insertError } = await supabase

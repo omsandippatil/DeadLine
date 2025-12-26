@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import ImageSlider from '../../components/ImageSlider';
-import EventDetailsComponent from '../../components/EventDetails';
-import SourcesComponent from '../../components/Sources';
+import ImageSlider from '../components/ImageSlider';
+import EventDetailsComponent from '../components/EventDetails';
+import SourcesComponent from '../components/Sources';
 
 interface KeyFact {
   label: string;
@@ -82,7 +82,10 @@ async function getEventDetails(id: string): Promise<EventDetails | null> {
     const response = await fetch(
       `${baseUrl}/api/get/details?event_id=${id}&api_key=${apiKey}`,
       {
-        cache: 'no-store',
+        next: { 
+          revalidate: false,
+          tags: [`event-${id}`]
+        },
         headers: {
           'Content-Type': 'application/json',
         },
@@ -121,7 +124,10 @@ async function getEventUpdates(id: string): Promise<EventUpdate[]> {
     const response = await fetch(
       `${baseUrl}/api/get/updates?event_id=${id}&api_key=${apiKey}`,
       {
-        cache: 'no-store',
+        next: { 
+          revalidate: false,
+          tags: [`event-updates-${id}`]
+        },
         headers: {
           'Content-Type': 'application/json',
         },
@@ -141,12 +147,33 @@ async function getEventUpdates(id: string): Promise<EventUpdate[]> {
   }
 }
 
-export default async function EventPage({ params }: { params: { id: string } }) {
+export const dynamic = 'force-static';
+export const revalidate = false;
+
+export default async function EventPage({ 
+  params,
+  searchParams 
+}: { 
+  params: { id: string };
+  searchParams: { api_key?: string };
+}) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
   
   if (!id) {
     console.error('Invalid event ID:', id);
     notFound();
+  }
+
+  // Check if revalidation is triggered
+  if (resolvedSearchParams.api_key) {
+    const apiKey = process.env.API_SECRET_KEY;
+    
+    if (resolvedSearchParams.api_key === apiKey) {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(`event-${id}`);
+      revalidateTag(`event-updates-${id}`);
+    }
   }
 
   const [eventDetails, eventUpdates] = await Promise.all([

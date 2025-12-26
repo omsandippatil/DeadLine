@@ -102,42 +102,28 @@ export default function ImageSlider({ images }: ImageSliderProps) {
           }}
         >
           {extendedImages.map((image, index) => (
-            <div
-              key={`image-${index}`}
-              className="flex-shrink-0 w-70 h-52 bg-gray-50 overflow-hidden relative border border-gray-200 transition-opacity duration-300"
-              style={{ 
-                boxShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-                opacity: imageLoading[index] ? 0.5 : 1
-              }}
-            >
-              {imageErrors[index] ? (
-                <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                  <div className="text-center text-gray-400 p-3">
-                    <svg className="w-10 h-10 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <p className="text-xs">Failed to load</p>
+            !imageErrors[index] && (
+              <div
+                key={`image-${index}`}
+                className="flex-shrink-0 w-70 h-52 bg-gray-50 overflow-hidden relative border border-gray-200"
+              >
+                {imageLoading[index] && (
+                  <div className="absolute inset-0 bg-gray-200 animate-pulse">
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer"></div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  {imageLoading[index] && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
-                      <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-                    </div>
-                  )}
-                  <img
-                    src={image}
-                    alt={`Gallery image ${(index % images.length) + 1}`}
-                    className="w-full h-full object-cover select-none"
-                    onLoad={() => handleImageLoad(index)}
-                    onError={() => handleImageError(index)}
-                    draggable={false}
-                    loading="lazy"
-                  />
-                </>
-              )}
-            </div>
+                )}
+                <img
+                  src={image}
+                  alt={`Gallery image ${(index % images.length) + 1}`}
+                  className="w-full h-full object-cover select-none"
+                  style={{ display: imageLoading[index] ? 'none' : 'block' }}
+                  onLoad={() => handleImageLoad(index)}
+                  onError={() => handleImageError(index)}
+                  draggable={false}
+                  loading="lazy"
+                />
+              </div>
+            )
           ))}
         </div>
       </div>
@@ -149,6 +135,17 @@ export default function ImageSlider({ images }: ImageSliderProps) {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
         }
       `}</style>
     </section>
