@@ -155,9 +155,9 @@ export const dynamicParams = true;
 export default async function EventPage({ 
   params 
 }: { 
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const id = params.id;
+  const { id } = await params;
   
   console.log('[EventPage] Rendering for ID:', id);
   console.log('[EventPage] Environment check:', {
