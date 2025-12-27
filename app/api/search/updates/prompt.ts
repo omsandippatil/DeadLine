@@ -25,7 +25,7 @@ RESPONSE FORMAT (JSON only):
     {
       "date": "YYYY-MM-DD",
       "title": "Specific development description",
-      "description": "Use 2-4 Compact Scentences. Complete summary with key facts, numbers, names. Use **keyword** once for most important keyword or name or fact or date."
+      "description": "Use 2-4 Compact Scentences. Complete summary with key facts, numbers, names. Use **keyword** once for most important keyword or name or fact or date or amount or crime but regarding the new update"
     }
   ]
 }
@@ -41,8 +41,7 @@ RULES:
    - Escape quotes with backslash
    - Be concise but complete
 6. STATUS: 
-   - "Justice" if outcome favors victims/accountability
-   - "Injustice" if outcome favors perpetrators/no accountability
+   - "Justice" if outcome clearly states that justice is provided. till that never state Justice always state "Injustice"
 7. NO speculation - only facts from articles
 
 ---

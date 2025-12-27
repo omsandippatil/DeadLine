@@ -9,6 +9,7 @@ interface ImageSliderProps {
 export default function ImageSlider({ images }: ImageSliderProps) {
   const [imageStates, setImageStates] = useState<Record<number, { loaded: boolean; error: boolean }>>({});
   const sliderRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const extendedImages = useMemo(() => {
     if (!images || images.length === 0) return [];
@@ -17,13 +18,23 @@ export default function ImageSlider({ images }: ImageSliderProps) {
 
   useEffect(() => {
     if (extendedImages.length > 0) {
-      const initialStates: Record<number, { loaded: boolean; error: boolean }> = {};
+      const initialStates: Record<number, { loaded: boolean; error: false }> = {};
       extendedImages.forEach((_, idx) => {
         initialStates[idx] = { loaded: false, error: false };
       });
       setImageStates(initialStates);
+
+      const preloadPriority = images.slice(0, 3);
+      preloadPriority.forEach(src => {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = src;
+        link.fetchPriority = 'high';
+        document.head.appendChild(link);
+      });
     }
-  }, [extendedImages]);
+  }, [extendedImages, images]);
 
   useEffect(() => {
     const slider = sliderRef.current;
@@ -45,19 +56,45 @@ export default function ImageSlider({ images }: ImageSliderProps) {
 
     slider.addEventListener('scroll', handleScroll, { passive: true });
     
-    setTimeout(() => {
-      if (slider) {
-        const slideWidth = 280;
-        const gap = 12;
-        const itemWidth = slideWidth + gap;
-        slider.scrollLeft = images.length * itemWidth;
-      }
-    }, 100);
+    const timer = setTimeout(() => {
+      const slideWidth = 280;
+      const gap = 12;
+      const itemWidth = slideWidth + gap;
+      slider.scrollLeft = images.length * itemWidth;
+    }, 50);
 
     return () => {
       slider.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
     };
   }, [extendedImages, images.length]);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            const src = img.dataset.src;
+            if (src && !img.src) {
+              img.src = src;
+            }
+          }
+        });
+      },
+      {
+        root: sliderRef.current,
+        rootMargin: '50px',
+        threshold: 0.01
+      }
+    );
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   const handleImageError = (index: number) => {
     setImageStates(prev => ({ 
@@ -105,6 +142,8 @@ export default function ImageSlider({ images }: ImageSliderProps) {
           >
             {extendedImages.map((image, index) => {
               const state = imageStates[index] || { loaded: false, error: false };
+              const isEager = index < images.length;
+              const isPriority = index < 3;
               
               if (state.error) {
                 return null;
@@ -121,7 +160,8 @@ export default function ImageSlider({ images }: ImageSliderProps) {
                     </div>
                   )}
                   <img
-                    src={`${image}?t=${Date.now()}`}
+                    src={isEager ? image : undefined}
+                    data-src={!isEager ? image : undefined}
                     alt={`Gallery image ${(index % images.length) + 1}`}
                     className={`w-full h-full object-cover select-none transition-opacity duration-300 ${
                       state.loaded ? 'opacity-100' : 'opacity-0'
@@ -129,7 +169,14 @@ export default function ImageSlider({ images }: ImageSliderProps) {
                     onLoad={() => handleImageLoad(index)}
                     onError={() => handleImageError(index)}
                     draggable={false}
-                    loading={index < images.length ? 'eager' : 'lazy'}
+                    loading={isEager ? 'eager' : 'lazy'}
+                    decoding="async"
+                    fetchPriority={isPriority ? 'high' : 'auto'}
+                    ref={(el) => {
+                      if (el && !isEager && observerRef.current) {
+                        observerRef.current.observe(el);
+                      }
+                    }}
                   />
                 </div>
               );
@@ -155,7 +202,7 @@ export default function ImageSlider({ images }: ImageSliderProps) {
           }
         }
         .animate-shimmer {
-          animation: shimmer 2s infinite;
+          animation: shimmer 1.5s infinite;
         }
       `}</style>
     </>

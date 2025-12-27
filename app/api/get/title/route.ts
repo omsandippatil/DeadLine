@@ -12,10 +12,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get('url');
 
-    console.log('[Title API] Request received for URL:', url);
-
     if (!url) {
-      console.error('[Title API] No URL parameter provided');
       return NextResponse.json(
         { error: 'URL parameter is required' },
         { status: 400 }
@@ -25,9 +22,7 @@ export async function GET(request: NextRequest) {
     try {
       decodedUrl = decodeURIComponent(url);
       new URL(decodedUrl);
-      console.log('[Title API] Decoded URL:', decodedUrl);
     } catch (e) {
-      console.error('[Title API] Invalid URL format:', url, e);
       return NextResponse.json(
         { error: 'Invalid URL format' },
         { status: 400 }
@@ -56,10 +51,7 @@ export async function GET(request: NextRequest) {
       signal: AbortSignal.timeout(15000),
     });
 
-    console.log('[Title API] Fetch response status:', response.status, 'for', decodedUrl);
-
     if (!response.ok) {
-      console.warn('[Title API] Non-OK response:', response.status, 'for', decodedUrl);
       const urlObj = new URL(decodedUrl);
       const domain = urlObj.hostname.replace('www.', '');
       const fallbackTitle = domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0];
@@ -69,14 +61,13 @@ export async function GET(request: NextRequest) {
         { 
           status: 200,
           headers: {
-            'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=86400',
+            'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
           }
         }
       );
     }
 
     const html = await response.text();
-    console.log('[Title API] HTML fetched, length:', html.length, 'for', decodedUrl);
     const $ = cheerio.load(html);
     
     let title = '';
@@ -88,19 +79,15 @@ export async function GET(request: NextRequest) {
     }
     
     if (!title) {
-      title = $('h1').first().text().trim();
-    }
-    
-    if (!title) {
       title = $('title').text().trim();
     }
     
     if (!title) {
-      title = $('meta[name="title"]').attr('content') || '';
+      title = $('h1').first().text().trim();
     }
     
     if (!title) {
-      title = $('meta[property="twitter:title"]').attr('content') || '';
+      title = $('meta[name="title"]').attr('content') || '';
     }
     
     if (!title) {
@@ -130,25 +117,17 @@ export async function GET(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[Title API] Success! Extracted title: "${title}" (took ${duration}ms) for ${decodedUrl}`);
 
     return NextResponse.json(
       { title },
       {
         status: 200,
         headers: {
-          'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=86400',
+          'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
         }
       }
     );
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error(`[Title API] Error after ${duration}ms:`, error);
-    console.error('[Title API] Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      url: decodedUrl || 'unknown'
-    });
-    
     const url = request.nextUrl.searchParams.get('url');
     if (url) {
       try {
@@ -161,7 +140,7 @@ export async function GET(request: NextRequest) {
           { 
             status: 200,
             headers: {
-              'Cache-Control': 'public, s-maxage=31536000, stale-while-revalidate=86400',
+              'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
             }
           }
         );

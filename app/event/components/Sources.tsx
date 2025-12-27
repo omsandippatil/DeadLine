@@ -104,26 +104,31 @@ export default function SourcesComponent({ sources }: SourcesProps) {
     setSourcesData(initialData);
 
     const fetchTitles = async () => {
-      try {
-        const updatedData = await Promise.all(
-          initialData.map(async (source) => {
+      const batchSize = 5;
+      const batches: SourceData[][] = [];
+      
+      for (let i = 0; i < initialData.length; i += batchSize) {
+        batches.push(initialData.slice(i, i + batchSize));
+      }
+
+      for (const batch of batches) {
+        const batchResults = await Promise.all(
+          batch.map(async (source) => {
             try {
-              const timestamp = Date.now();
-              const response = await fetch(`/api/get/title?url=${encodeURIComponent(source.url)}&_t=${timestamp}`, {
-                cache: 'no-store'
+              const response = await fetch(`/api/get/title?url=${encodeURIComponent(source.url)}`, {
+                cache: 'force-cache'
               });
               
               if (response.ok) {
                 const data = await response.json();
-                const headline = data.title || source.domain.charAt(0).toUpperCase() + source.domain.slice(1).split('.')[0];
                 return {
                   ...source,
-                  title: headline,
+                  title: data.title || source.domain.charAt(0).toUpperCase() + source.domain.slice(1).split('.')[0],
                   loading: false
                 };
               }
             } catch (error) {
-              console.error('Error fetching title for', source.url, error);
+              console.error('Error fetching title for', source.url);
             }
             
             return {
@@ -133,15 +138,19 @@ export default function SourcesComponent({ sources }: SourcesProps) {
             };
           })
         );
-        
-        setSourcesData(updatedData);
-      } catch (error) {
-        console.error('Error fetching titles:', error);
-        setSourcesData(initialData.map(s => ({ 
-          ...s, 
-          title: s.domain.charAt(0).toUpperCase() + s.domain.slice(1).split('.')[0],
-          loading: false 
-        })));
+
+        setSourcesData(prev => {
+          const newData = [...prev];
+          batchResults.forEach(result => {
+            const index = newData.findIndex(item => item.url === result.url);
+            if (index !== -1) {
+              newData[index] = result;
+            }
+          });
+          return newData;
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     };
 

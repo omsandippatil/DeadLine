@@ -8,8 +8,8 @@ GLOBAL FORMATTING RULES:
 - Escape all quotes with backslash
 - Include ONLY information available in sources - skip unavailable fields
 - Each fact appears once in its most logical location
-- Bold formatting (**text**) in "overview" field, limited to 2-3 instances for keywords or names or facts. and for other than overview only 1 instance and only in summary.
-- NO bold in any other fields (summaries, descriptions, etc.)
+- Bold formatting (**text**) in "overview or summary" field, limited to 2-3 instances for keywords or names or facts or amount or crime in overview and for other than overview only single instance and only in summary.
+- NO bold in any other fields (title, headlines)
 - For groups: include count in name field 
 JSON STRUCTURE:
 
@@ -33,7 +33,7 @@ JSON STRUCTURE:
     "individuals": [
       {
         "name": "Full accurate name (REQUIRED as first field)",
-        "summary": "3-4 compact sentences: name/aliases, age, occupation/employer, address, role in incident, actions/timeline, relationship to victims, family/criminal history, custody status. NO bold.",
+        "summary": "3-4 compact sentences: name/aliases, age, occupation/employer, address, role in incident, actions/timeline, relationship to victims, family/criminal history, custody status.",
         "details": [
           {"label": "Accused", "value": "Accused party information"}
         ]
@@ -43,7 +43,7 @@ JSON STRUCTURE:
     "organizations": [
       {
         "name": "Full accurate organization name (REQUIRED as first field, include count if group)",
-        "summary": "3-4 compact sentences: name/registration, type/industry, jurisdiction, leadership, role, actions/failures, relationship, violations, history, response. NO bold.",
+        "summary": "3-4 compact sentences: name/registration, type/industry, jurisdiction, leadership, role, actions/failures, relationship, violations, history, response.",
         "details": [
           {"label": "Accused", "value": "Accused party information"}
         ]
@@ -56,7 +56,7 @@ JSON STRUCTURE:
     "individuals": [
       {
         "name": "Full accurate name or description (REQUIRED as first field)",
-        "summary": "3-4 sentences: name/description, age/gender, occupation/workplace, address, relationship to accused, harm/injuries, treatment/hospital, condition/prognosis, family impact, compensation. NO bold.",
+        "summary": "3-4 sentences: name/description, age/gender, occupation/workplace, address, relationship to accused, harm/injuries, treatment/hospital, condition/prognosis, family impact, compensation.",
         "details": [
           {"label": "Victim", "value": "Victim party information"}
         ]
@@ -66,7 +66,7 @@ JSON STRUCTURE:
     "groups": [
       {
         "name": "Accurate group description (REQUIRED as first field, include count)",
-        "summary": "3-4 compact sentences: size/demographics, composition, location/community, relationship, collective harm, impact, legal action, support. NO bold.",
+        "summary": "3-4 compact sentences: size/demographics, composition, location/community, relationship, collective harm, impact, legal action, support.",
         "details": [
           {"label": "Victims", "value": "Victim party information"}
         ]
