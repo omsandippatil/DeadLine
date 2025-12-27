@@ -8,7 +8,7 @@ GLOBAL FORMATTING RULES:
 - Escape all quotes with backslash
 - Include ONLY information available in sources - skip unavailable fields
 - Each fact appears once in its most logical location
-- Bold formatting (**text**) in "overview or summary" field, limited to 2-3 instances for keywords or names or facts or amount or crime in overview and for other than overview only single instance and only in summary.
+- Bold formatting (**text**) in "overview, description and summary only" field, limited to 2-3 instances for keywords or names or facts or amount or crime in overview and for other than overview only single instance and only in summary.
 - NO bold in any other fields (title, headlines)
 - For groups: include count in name field 
 JSON STRUCTURE:
