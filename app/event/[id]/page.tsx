@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import ImageSlider from '../components/ImageSlider';
 import EventDetailsComponent from '../components/EventDetails';
 import SourcesComponent from '../components/Sources';
+import { revalidateTag } from 'next/cache';
 
 interface KeyFact {
   label: string;
@@ -90,20 +91,24 @@ async function getEventDetails(id: string): Promise<EventDetails | null> {
 
     const response = await fetch(url, {
       next: { 
-        tags: [`event-${id}`, `event-details-${id}`]
+        tags: [`event-${id}`, `event-details-${id}`],
+        revalidate: false
       },
       headers: {
         'Content-Type': 'application/json',
       },
+      cache: 'force-cache'
     });
 
     if (!response.ok) {
+      console.error('[getEventDetails] Response not OK:', response.status);
       return null;
     }
 
     const result: EventDetailsResponse = await response.json();
     
     if (!result.success || !result.data) {
+      console.error('[getEventDetails] Invalid response structure');
       return null;
     }
 
@@ -127,11 +132,13 @@ async function getEventUpdates(id: string): Promise<EventUpdate[]> {
       `${baseUrl}/api/get/updates?event_id=${id}&api_key=${apiKey}`,
       {
         next: { 
-          tags: [`event-${id}`, `event-updates-${id}`]
+          tags: [`event-${id}`, `event-updates-${id}`],
+          revalidate: false
         },
         headers: {
           'Content-Type': 'application/json',
         },
+        cache: 'force-cache'
       }
     );
 
