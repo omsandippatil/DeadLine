@@ -1,7 +1,7 @@
-import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,8 +41,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    tagsToRevalidate.forEach(tag => {
-      revalidateTag(tag, '/');
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    
+    await fetch(`${baseUrl}/api/internal/revalidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tags: tagsToRevalidate
+      }),
     });
 
     return NextResponse.json({
@@ -101,8 +109,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    tagsToRevalidate.forEach(tag => {
-      revalidateTag(tag, '/');
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    
+    await fetch(`${baseUrl}/api/internal/revalidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tags: tagsToRevalidate
+      }),
     });
 
     return NextResponse.json({
