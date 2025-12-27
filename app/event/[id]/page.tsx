@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import ImageSlider from '../components/ImageSlider';
 import EventDetailsComponent from '../components/EventDetails';
 import SourcesComponent from '../components/Sources';
@@ -150,6 +151,86 @@ async function getEventUpdates(id: string): Promise<EventUpdate[]> {
   }
 }
 
+function stripMarkdown(text: string): string {
+  return text.replace(/\*\*([^*]+)\*\*/g, '$1');
+}
+
+function truncateText(text: string, maxLength: number): string {
+  const stripped = stripMarkdown(text);
+  if (stripped.length <= maxLength) return stripped;
+  return stripped.substring(0, maxLength).trim() + '...';
+}
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  
+  const eventDetails = await getEventDetails(id);
+  
+  if (!eventDetails) {
+    return {
+      title: 'Event Not Found - DEADLINE',
+      description: 'The requested event could not be found.',
+    };
+  }
+
+  const title = `${eventDetails.headline} - DEADLINE`;
+  const description = truncateText(eventDetails.details?.overview || '', 160);
+  const imageUrl = eventDetails.images && eventDetails.images.length > 0 
+    ? eventDetails.images[0] 
+    : '/og-default.png';
+  
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://deadline.com';
+  const url = `${baseUrl}/event/${id}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: 'article',
+      url,
+      title,
+      description,
+      siteName: 'DEADLINE',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: eventDetails.headline,
+        },
+      ],
+      publishedTime: eventDetails.created_at,
+      modifiedTime: eventDetails.updated_at,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+      creator: '@deadline',
+      site: '@deadline',
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    alternates: {
+      canonical: url,
+    },
+  };
+}
+
 export const dynamic = 'force-static';
 export const revalidate = false;
 
@@ -196,72 +277,100 @@ export default async function EventPage({
 
   const safeEventUpdates = Array.isArray(eventUpdates) ? eventUpdates : [];
 
-  return (
-    <div className="min-h-screen bg-gray-50 scroll-smooth" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <header className="border-b border-black bg-white sticky top-0 z-50">
-        <div className="max-w-full mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            <a href="/" className="text-xl font-black tracking-tight uppercase text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-              DEADLINE
-            </a>
-            <nav className="flex space-x-4">
-              <a href="#overview" className="text-xs font-normal text-black hover:underline transition-all duration-300 font-mono">Overview</a>
-              <a href="#sources" className="text-xs font-normal text-black hover:underline transition-all duration-300 font-mono">Sources</a>
-            </nav>
-          </div>
-        </div>
-      </header>
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: safeEventDetails.headline,
+    description: truncateText(safeEventDetails.details?.overview || '', 160),
+    image: safeEventDetails.images.length > 0 ? safeEventDetails.images[0] : undefined,
+    datePublished: safeEventDetails.created_at,
+    dateModified: safeEventDetails.updated_at,
+    author: {
+      '@type': 'Organization',
+      name: 'DEADLINE',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'DEADLINE',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${process.env.NEXT_PUBLIC_BASE_URL}/logo.png`,
+      },
+    },
+  };
 
-      <section className="bg-black text-white py-8 border-b-2 border-black">
-        <div className="max-w-full mx-auto px-6">
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <span className="px-3 py-1 bg-white text-black text-xs uppercase tracking-wider border border-black font-mono">
-                {new Date(safeEventDetails.created_at || Date.now()).toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </span>
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <div className="min-h-screen bg-gray-50 scroll-smooth" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <header className="border-b border-black bg-white sticky top-0 z-50">
+          <div className="max-w-full mx-auto px-6 py-3">
+            <div className="flex items-center justify-between">
+              <a href="/" className="text-xl font-black tracking-tight uppercase text-black hover:opacity-80 transition-opacity" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                DEADLINE
+              </a>
+              <nav className="flex space-x-4">
+                <a href="#overview" className="text-xs font-normal text-black hover:underline transition-all duration-300 font-mono">Overview</a>
+                <a href="#sources" className="text-xs font-normal text-black hover:underline transition-all duration-300 font-mono">Sources</a>
+              </nav>
             </div>
-            <h1 
-              className="text-2xl md:text-3xl font-bold leading-tight tracking-tight text-white text-justify" 
-              style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-            >
-              {safeEventDetails.headline}
-            </h1>
-            <p className="text-base text-white text-justify font-mono">
-              {safeEventDetails.location}
+          </div>
+        </header>
+
+        <section className="bg-black text-white py-8 border-b-2 border-black">
+          <div className="max-w-full mx-auto px-6">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <span className="px-3 py-1 bg-white text-black text-xs uppercase tracking-wider border border-black font-mono">
+                  {new Date(safeEventDetails.created_at || Date.now()).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+              </div>
+              <h1 
+                className="text-2xl md:text-3xl font-bold leading-tight tracking-tight text-white text-justify" 
+                style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+              >
+                {safeEventDetails.headline}
+              </h1>
+              <p className="text-base text-white text-justify font-mono">
+                {safeEventDetails.location}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <main className="max-w-full mx-auto px-6 py-8">
+          <div className="max-w-none">
+            <ImageSlider images={safeEventDetails.images} />
+            <div id="overview">
+              <EventDetailsComponent 
+                eventDetails={safeEventDetails} 
+                eventUpdates={safeEventUpdates} 
+              />
+            </div>
+            <div id="sources">
+              <SourcesComponent sources={safeEventDetails.sources} />
+            </div>
+          </div>
+        </main>
+
+        <footer className="bg-black text-white py-6 border-t-2 border-black">
+          <div className="max-w-full mx-auto px-6 text-center">
+            <h2 className="text-lg font-black tracking-tight uppercase mb-2 text-white" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              DEADLINE
+            </h2>
+            <p className="text-white text-sm font-mono">
+              A Museum of temporary truths.
             </p>
           </div>
-        </div>
-      </section>
-
-      <main className="max-w-full mx-auto px-6 py-8">
-        <div className="max-w-none">
-          <ImageSlider images={safeEventDetails.images} />
-          <div id="overview">
-            <EventDetailsComponent 
-              eventDetails={safeEventDetails} 
-              eventUpdates={safeEventUpdates} 
-            />
-          </div>
-          <div id="sources">
-            <SourcesComponent sources={safeEventDetails.sources} />
-          </div>
-        </div>
-      </main>
-
-      <footer className="bg-black text-white py-6 border-t-2 border-black">
-        <div className="max-w-full mx-auto px-6 text-center">
-          <h2 className="text-lg font-black tracking-tight uppercase mb-2 text-white" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-            DEADLINE
-          </h2>
-          <p className="text-white text-sm font-mono">
-            A Museum of temporary truths.
-          </p>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </>
   );
 }

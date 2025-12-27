@@ -195,7 +195,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                       {fact.label}
                     </span>
                     <span className="text-black text-[11px] leading-relaxed flex-1 font-mono">
-                      {fact.value}
+                      <HighlightedText text={fact.value} />
                     </span>
                   </div>
                 ))}
@@ -224,10 +224,10 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                     return (
                       <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
                         <h4 className="text-sm font-bold mb-2 text-black font-mono">
-                          {person.name}
+                          <HighlightedText text={person.name} />
                         </h4>
                         <p className="text-[11px] leading-relaxed text-justify mb-3 text-black font-mono">
-                          {person.summary || ''}
+                          <HighlightedText text={person.summary || ''} />
                         </p>
                         {sortedDetails.length > 0 && (
                           <div className="space-y-1.5 pl-2 border-l-2 border-black">
@@ -237,7 +237,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                                   {fact.label}
                                 </span>
                                 <span className="text-black text-[11px] leading-relaxed flex-1 font-mono">
-                                  {fact.value}
+                                  <HighlightedText text={fact.value} />
                                 </span>
                               </div>
                             ))}
@@ -273,10 +273,10 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                     return (
                       <div key={index} className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
                         <h4 className="text-sm font-bold mb-2 text-black font-mono">
-                          {victim.name}
+                          <HighlightedText text={victim.name} />
                         </h4>
                         <p className="text-[11px] leading-relaxed text-justify mb-3 text-black font-mono">
-                          {victim.summary || ''}
+                          <HighlightedText text={victim.summary || ''} />
                         </p>
                         {sortedDetails.length > 0 && (
                           <div className="space-y-1.5 pl-2 border-l-2 border-black">
@@ -286,7 +286,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                                   {fact.label}
                                 </span>
                                 <span className="text-black text-[11px] leading-relaxed flex-1 font-mono">
-                                  {fact.value}
+                                  <HighlightedText text={fact.value} />
                                 </span>
                               </div>
                             ))}
@@ -330,7 +330,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                             </div>
                           )}
                           <p className="text-[11px] font-bold leading-relaxed mb-2 text-black font-mono">
-                            {entry.context}
+                            <HighlightedText text={entry.context} />
                           </p>
                           {entry.events && entry.events.length > 0 && (
                             <div className="space-y-2 pl-2 border-l border-gray-300">
@@ -342,16 +342,16 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                                     </span>
                                   )}
                                   <p className="text-[11px] leading-relaxed text-black mb-1 font-mono">
-                                    {evt.description}
+                                    <HighlightedText text={evt.description} />
                                   </p>
                                   {evt.participants && (
                                     <p className="text-[10px] text-gray-600 italic mb-1 font-mono">
-                                      <span className="font-bold">Participants:</span> {evt.participants}
+                                      <span className="font-bold">Participants:</span> <HighlightedText text={evt.participants} />
                                     </p>
                                   )}
                                   {evt.evidence && (
                                     <p className="text-[10px] text-gray-600 italic font-mono">
-                                      <span className="font-bold">Evidence:</span> {evt.evidence}
+                                      <span className="font-bold">Evidence:</span> <HighlightedText text={evt.evidence} />
                                     </p>
                                   )}
                                 </div>
@@ -385,7 +385,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                     <article key={update.update_id} className="pb-3 border-b border-gray-200 last:border-b-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h4 className="text-xs font-bold text-black flex-1 font-mono">
-                          {update.title}
+                          <HighlightedText text={update.title} />
                         </h4>
                         <time className="text-[10px] text-white bg-black px-1.5 py-0.5 whitespace-nowrap font-mono">
                           {new Date(update.update_date).toLocaleDateString('en-US', { 
@@ -396,7 +396,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                         </time>
                       </div>
                       <p className="text-[11px] leading-relaxed text-justify text-black font-mono">
-                        {update.description}
+                        <HighlightedText text={update.description} />
                       </p>
                     </article>
                   ))}

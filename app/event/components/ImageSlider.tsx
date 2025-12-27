@@ -47,14 +47,14 @@ export default function ImageSlider({ images }: ImageSliderProps) {
 
     slider.addEventListener('scroll', handleScroll, { passive: true });
     
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       if (slider) {
         const slideWidth = 280;
         const gap = 12;
         const itemWidth = slideWidth + gap;
         slider.scrollLeft = images.length * itemWidth;
       }
-    });
+    }, 100);
 
     return () => {
       slider.removeEventListener('scroll', handleScroll);
@@ -74,13 +74,15 @@ export default function ImageSlider({ images }: ImageSliderProps) {
     if (loadTimeoutRef.current[index]) {
       clearTimeout(loadTimeoutRef.current[index]);
     }
-    setImageLoading(prev => ({ ...prev, [index]: false }));
+    setTimeout(() => {
+      setImageLoading(prev => ({ ...prev, [index]: false }));
+    }, 200);
   };
 
   const handleImageStart = (index: number) => {
     loadTimeoutRef.current[index] = setTimeout(() => {
       setImageLoading(prev => ({ ...prev, [index]: false }));
-    }, 10000);
+    }, 15000);
   };
 
   if (!images || images.length === 0) {
@@ -127,7 +129,7 @@ export default function ImageSlider({ images }: ImageSliderProps) {
                   <img
                     src={image}
                     alt={`Gallery image ${(index % images.length) + 1}`}
-                    className={`w-full h-full object-cover select-none transition-opacity duration-300 ${
+                    className={`w-full h-full object-cover select-none transition-opacity duration-500 ${
                       imageLoading[index] ? 'opacity-0' : 'opacity-100'
                     }`}
                     onLoadStart={() => handleImageStart(index)}

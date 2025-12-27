@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 interface SourcesProps {
   sources: string[];
@@ -62,85 +62,125 @@ function SourceCard({ sourceData }: { sourceData: SourceData }) {
 }
 
 export default function SourcesComponent({ sources }: SourcesProps) {
-  const [isClient, setIsClient] = useState(false);
   const [sourcesData, setSourcesData] = useState<SourceData[]>([]);
-
-  const initialSourceData = useMemo(() => {
-    if (!sources || sources.length === 0) return [];
-    
-    return sources
-      .filter(source => {
-        try {
-          new URL(source);
-          return true;
-        } catch {
-          return false;
-        }
-      })
-      .map(url => {
-        try {
-          const urlObj = new URL(url);
-          const domain = urlObj.hostname.replace('www.', '');
-          
-          return {
-            url,
-            domain,
-            title: 'Loading...',
-            favicon: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
-            loading: true
-          };
-        } catch {
-          return null;
-        }
-      })
-      .filter((data): data is SourceData => data !== null);
-  }, [sources]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    setSourcesData(initialSourceData);
-  }, [initialSourceData]);
+    setMounted(true);
 
-  useEffect(() => {
-    if (!isClient || initialSourceData.length === 0) return;
+    if (!sources || sources.length === 0) {
+      return;
+    }
+
+    const validSources = sources.filter(source => {
+      if (!source || typeof source !== 'string') return false;
+      try {
+        new URL(source);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+    const initialData: SourceData[] = validSources.map(url => {
+      try {
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname.replace('www.', '');
+        
+        return {
+          url,
+          domain,
+          title: domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0],
+          favicon: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
+          loading: true
+        };
+      } catch {
+        return null;
+      }
+    }).filter((data): data is SourceData => data !== null);
+
+    setSourcesData(initialData);
 
     const fetchTitles = async () => {
-      const updatedData = await Promise.all(
-        initialSourceData.map(async (source) => {
-          try {
-            const response = await fetch(`/api/get/title?url=${encodeURIComponent(source.url)}`);
-            if (response.ok) {
-              const data = await response.json();
-              return {
-                ...source,
-                title: data.title || source.domain.charAt(0).toUpperCase() + source.domain.slice(1).split('.')[0],
-                loading: false
-              };
+      try {
+        const updatedData = await Promise.all(
+          initialData.map(async (source) => {
+            try {
+              const response = await fetch(`/api/get/title?url=${encodeURIComponent(source.url)}`);
+              
+              if (response.ok) {
+                const data = await response.json();
+                return {
+                  ...source,
+                  title: data.title || source.domain.charAt(0).toUpperCase() + source.domain.slice(1).split('.')[0],
+                  loading: false
+                };
+              }
+            } catch (error) {
+              console.error('Error fetching title for', source.url, error);
             }
-          } catch (error) {
-            console.error('Error fetching title:', error);
-          }
-          return {
-            ...source,
-            title: source.domain.charAt(0).toUpperCase() + source.domain.slice(1).split('.')[0],
-            loading: false
-          };
-        })
-      );
-      setSourcesData(updatedData);
+            
+            return {
+              ...source,
+              loading: false
+            };
+          })
+        );
+        
+        setSourcesData(updatedData);
+      } catch (error) {
+        console.error('Error fetching titles:', error);
+        setSourcesData(initialData.map(s => ({ ...s, loading: false })));
+      }
     };
 
     fetchTitles();
-  }, [isClient, initialSourceData]);
+  }, [sources]);
 
-  if (!isClient || sourcesData.length === 0) {
+  if (!mounted) {
     return null;
+  }
+
+  if (!sources || sources.length === 0) {
+    return (
+      <section className="mb-6">
+        <h3 className="text-base font-bold mb-3 sm:mb-4 text-black border-b-2 border-black pb-2 font-mono uppercase">
+          SOURCES
+        </h3>
+        <div className="text-center py-6 text-gray-400">
+          <p className="text-sm font-mono">No sources available</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (sourcesData.length === 0) {
+    return (
+      <section className="mb-6">
+        <h3 className="text-base font-bold mb-3 sm:mb-4 text-black border-b-2 border-black pb-2 font-mono uppercase">
+          SOURCES
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+          {sources.slice(0, 8).map((source, index) => (
+            <div key={index} className="bg-white border border-black p-3 sm:p-4">
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-black overflow-hidden bg-gray-200 animate-pulse"></div>
+                <div className="w-full space-y-2">
+                  <div className="h-3 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-3 bg-gray-200 animate-pulse rounded w-3/4 mx-auto"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
   }
 
   return (
     <section className="mb-6">
       <h3 className="text-base font-bold mb-3 sm:mb-4 text-black border-b-2 border-black pb-2 font-mono uppercase">
-        SOURCES
+        SOURCES ({sourcesData.length})
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
         {sourcesData.map((sourceData, index) => (
