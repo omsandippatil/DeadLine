@@ -297,6 +297,11 @@ async function processEventUpdate(event_id: string, apiKey: string) {
         error: 'Failed to analyze new articles',
         message: 'Analysis returned no updates despite having new articles',
         new_articles_found: selectedResults.length,
+        article_samples: selectedResults.slice(0, 2).map(r => ({
+          title: r.title,
+          date: r.publishedDate,
+          snippet: r.snippet.substring(0, 100)
+        })),
         debug: debugInfo
       }, { status: 500 });
     }
@@ -500,13 +505,30 @@ async function analyzeWithGroq(
     });
     
     if (!completion.choices?.[0]?.message?.content) {
+      console.error('Groq returned no content');
       return null;
     }
 
-    const analysisResult = JSON.parse(completion.choices[0].message.content);
+    const rawResponse = completion.choices[0].message.content;
+    console.log('Groq raw response:', rawResponse);
+
+    let analysisResult;
+    try {
+      analysisResult = JSON.parse(rawResponse);
+    } catch (parseError) {
+      console.error('Failed to parse Groq response:', parseError);
+      console.error('Raw response was:', rawResponse);
+      return null;
+    }
     
     // Validate that we have updates
-    if (!analysisResult.updates || analysisResult.updates.length === 0) {
+    if (!analysisResult.updates || !Array.isArray(analysisResult.updates)) {
+      console.error('No updates array in response:', analysisResult);
+      return null;
+    }
+
+    if (analysisResult.updates.length === 0) {
+      console.error('Empty updates array despite having articles');
       return null;
     }
 
@@ -515,14 +537,18 @@ async function analyzeWithGroq(
     );
 
     if (validUpdates.length === 0) {
+      console.error('No valid updates after filtering. Original updates:', analysisResult.updates);
       return null;
     }
+
+    console.log(`Successfully extracted ${validUpdates.length} updates`);
 
     return { 
       status: analysisResult.status || 'Injustice',
       updates: validUpdates 
     };
   } catch (error) {
+    console.error('Error in analyzeWithGroq:', error);
     return null;
   }
 }
