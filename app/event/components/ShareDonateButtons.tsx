@@ -124,12 +124,18 @@ export default function ShareDonateButtons({
       </div>
 
       {showShareMenu && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] animate-fadeIn backdrop-blur-sm"
-          onClick={() => setShowShareMenu(false)}
-        >
+        <>
           <div 
-            className="bg-white shadow-2xl p-6 max-w-sm w-full mx-4 animate-slideUp"
+            className="fixed inset-0 bg-black bg-opacity-60 z-[100]"
+            style={{ backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowShareMenu(false)}
+          />
+          <div 
+            className="fixed top-1/2 left-1/2 bg-white shadow-2xl p-6 max-w-sm w-full mx-4 z-[101]"
+            style={{
+              transform: 'translate(-50%, -50%)',
+              animation: 'slideUp 0.3s ease-out'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4 pb-3 border-b-2 border-black">
@@ -213,16 +219,22 @@ export default function ShareDonateButtons({
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {showQR && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] animate-fadeIn backdrop-blur-sm"
-          onClick={() => setShowQR(false)}
-        >
+        <>
           <div 
-            className="bg-white shadow-2xl p-6 max-w-sm w-full mx-4 animate-slideUp"
+            className="fixed inset-0 bg-black bg-opacity-60 z-[100]"
+            style={{ backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowQR(false)}
+          />
+          <div 
+            className="fixed top-1/2 left-1/2 bg-white shadow-2xl p-6 max-w-sm w-full mx-4 z-[101]"
+            style={{
+              transform: 'translate(-50%, -50%)',
+              animation: 'slideUp 0.3s ease-out'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4 pb-3 border-b-2 border-black">
@@ -254,40 +266,19 @@ export default function ShareDonateButtons({
               Thank you for supporting our work.<br/>Scan this code with your phone to donate.
             </p>
           </div>
-        </div>
+        </>
       )}
 
       <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
         @keyframes slideUp {
           from {
-            transform: translateY(20px);
+            transform: translate(-50%, -50%) translateY(20px);
             opacity: 0;
           }
           to {
-            transform: translateY(0);
+            transform: translate(-50%, -50%) translateY(0);
             opacity: 1;
           }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-
-        .animate-pulse {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
         @keyframes pulse {
@@ -297,6 +288,10 @@ export default function ShareDonateButtons({
           50% {
             opacity: 0.5;
           }
+        }
+
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
     </>
