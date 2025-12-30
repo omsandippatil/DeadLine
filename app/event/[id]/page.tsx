@@ -79,6 +79,12 @@ interface SourceWithTitle {
   favicon: string;
 }
 
+// Configuration for static generation
+export const dynamic = 'force-static';
+export const dynamicParams = true; // Allow dynamic params
+export const revalidate = false;
+export const fetchCache = 'force-cache';
+
 async function getEventDetails(slug: string): Promise<EventDetails | null> {
   try {
     const apiKey = process.env.API_SECRET_KEY;
@@ -109,20 +115,20 @@ async function getEventDetails(slug: string): Promise<EventDetails | null> {
     });
 
     if (!response.ok) {
-      console.error('[getEventDetails] Response not OK:', response.status);
+      console.error('[getEventDetails] Response not OK:', response.status, 'for slug:', slug);
       return null;
     }
 
     const result: EventDetailsResponse = await response.json();
     
     if (!result.success || !result.data) {
-      console.error('[getEventDetails] Invalid response structure');
+      console.error('[getEventDetails] Invalid response structure for slug:', slug);
       return null;
     }
 
     return result.data;
   } catch (error) {
-    console.error('[getEventDetails] Exception:', error);
+    console.error('[getEventDetails] Exception for slug:', slug, error);
     return null;
   }
 }
@@ -238,7 +244,6 @@ function generateDynamicKeywords(eventDetails: EventDetails): string[] {
     eventDetails.location,
   ];
 
-  // Add victim-related keywords
   if (eventDetails.victims?.individuals?.length) {
     keywords.push('victim advocacy', 'justice for victims');
   }
@@ -246,7 +251,6 @@ function generateDynamicKeywords(eventDetails: EventDetails): string[] {
     keywords.push('marginalized communities', 'systemic injustice');
   }
 
-  // Add accused-related keywords
   if (eventDetails.accused?.individuals?.length || eventDetails.accused?.organizations?.length) {
     keywords.push('accountability', 'alleged perpetrators');
   }
@@ -254,12 +258,49 @@ function generateDynamicKeywords(eventDetails: EventDetails): string[] {
   return keywords;
 }
 
+// Generate static paths for pre-rendering
+export async function generateStaticParams() {
+  try {
+    const apiKey = process.env.API_SECRET_KEY;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    if (!apiKey || !baseUrl) {
+      console.error('[generateStaticParams] Missing environment variables');
+      return [];
+    }
+
+    // Fetch all event slugs from your API
+    const response = await fetch(
+      `${baseUrl}/api/get/all-slugs?api_key=${apiKey}`,
+      {
+        next: { revalidate: 3600 }, // Revalidate list every hour
+      }
+    );
+
+    if (!response.ok) {
+      console.error('[generateStaticParams] Failed to fetch slugs');
+      return [];
+    }
+
+    const data = await response.json();
+    const slugs = data.slugs || [];
+
+    return slugs.map((slug: string) => ({
+      slug: slug,
+    }));
+  } catch (error) {
+    console.error('[generateStaticParams] Exception:', error);
+    return [];
+  }
+}
+
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams.slug;
   
   const eventDetails = await getEventDetails(slug);
   
@@ -346,18 +387,16 @@ export async function generateMetadata({
   };
 }
 
-export const dynamic = 'force-static';
-export const revalidate = false;
-export const fetchCache = 'force-cache';
-
 export default async function EventPage({ 
   params 
 }: { 
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  const { slug } = await params;
+  const resolvedParams = await Promise.resolve(params);
+  const slug = resolvedParams.slug;
   
-  if (!slug) {
+  if (!slug || typeof slug !== 'string') {
+    console.error('[EventPage] Invalid slug:', slug);
     notFound();
   }
 
@@ -367,6 +406,7 @@ export default async function EventPage({
   ]);
 
   if (!eventDetails) {
+    console.error('[EventPage] Event not found for slug:', slug);
     notFound();
   }
 
@@ -404,7 +444,6 @@ export default async function EventPage({
   const upiName = process.env.NEXT_PUBLIC_UPI_NAME || '';
   const upiNote = process.env.NEXT_PUBLIC_UPI_NOTE || '';
 
-  // Enhanced structured data for better AI/search engine understanding
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
@@ -445,7 +484,6 @@ export default async function EventPage({
     }
   };
 
-  // Generate SEO-friendly text content for AI crawlers
   const seoTextContent = `
     ${safeEventDetails.headline}. 
     Location: ${safeEventDetails.location}. 
@@ -466,7 +504,6 @@ export default async function EventPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       
-      {/* Hidden SEO content for AI search engines */}
       <div className="sr-only" aria-hidden="true">
         <h1>{safeEventDetails.headline}</h1>
         <p>{seoTextContent}</p>
