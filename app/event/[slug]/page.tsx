@@ -79,10 +79,11 @@ interface SourceWithTitle {
   favicon: string;
 }
 
-// These must match your folder name exactly
-type PageProps = {
-  params: Promise<{ id: string }> | { id: string };
-}
+// Configuration for static generation
+export const dynamic = 'force-static';
+export const dynamicParams = true; // Allow dynamic params
+export const revalidate = false;
+export const fetchCache = 'force-cache';
 
 async function getEventDetails(slug: string): Promise<EventDetails | null> {
   try {
@@ -101,16 +102,16 @@ async function getEventDetails(slug: string): Promise<EventDetails | null> {
     }
 
     const url = `${baseUrl}/api/get/details?slug=${encodeURIComponent(slug)}&api_key=${apiKey}`;
-    console.log('[getEventDetails] Fetching:', url);
 
     const response = await fetch(url, {
       next: { 
         tags: [`event-${slug}`, `event-details-${slug}`],
-        revalidate: 300
+        revalidate: false
       },
       headers: {
         'Content-Type': 'application/json',
       },
+      cache: 'force-cache'
     });
 
     if (!response.ok) {
@@ -125,7 +126,6 @@ async function getEventDetails(slug: string): Promise<EventDetails | null> {
       return null;
     }
 
-    console.log('[getEventDetails] Successfully fetched event:', result.data.headline);
     return result.data;
   } catch (error) {
     console.error('[getEventDetails] Exception for slug:', slug, error);
@@ -147,11 +147,12 @@ async function getEventUpdates(slug: string): Promise<EventUpdate[]> {
       {
         next: { 
           tags: [`event-${slug}`, `event-updates-${slug}`],
-          revalidate: 300
+          revalidate: false
         },
         headers: {
           'Content-Type': 'application/json',
         },
+        cache: 'force-cache'
       }
     );
 
@@ -193,11 +194,12 @@ async function getSourceTitles(sources: string[], slug: string): Promise<SourceW
           {
             next: {
               tags: [`event-${slug}`, `source-${domain}`],
-              revalidate: 3600
+              revalidate: false
             },
             headers: {
               'Content-Type': 'application/json',
             },
+            cache: 'force-cache'
           }
         );
 
@@ -256,13 +258,51 @@ function generateDynamicKeywords(eventDetails: EventDetails): string[] {
   return keywords;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+// Generate static paths for pre-rendering
+export async function generateStaticParams() {
+  try {
+    const apiKey = process.env.API_SECRET_KEY;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    if (!apiKey || !baseUrl) {
+      console.error('[generateStaticParams] Missing environment variables');
+      return [];
+    }
+
+    // Fetch all event slugs from your API
+    const response = await fetch(
+      `${baseUrl}/api/get/all-slugs?api_key=${apiKey}`,
+      {
+        next: { revalidate: 3600 }, // Revalidate list every hour
+      }
+    );
+
+    if (!response.ok) {
+      console.error('[generateStaticParams] Failed to fetch slugs');
+      return [];
+    }
+
+    const data = await response.json();
+    const slugs = data.slugs || [];
+
+    return slugs.map((slug: string) => ({
+      slug: slug,
+    }));
+  } catch (error) {
+    console.error('[generateStaticParams] Exception:', error);
+    return [];
+  }
+}
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: { slug: string };
+}): Promise<Metadata> {
   const resolvedParams = await Promise.resolve(params);
-  const id = resolvedParams.id;
+  const slug = resolvedParams.slug;
   
-  console.log('[generateMetadata] Processing id:', id);
-  
-  const eventDetails = await getEventDetails(id);
+  const eventDetails = await getEventDetails(slug);
   
   if (!eventDetails) {
     return {
@@ -278,7 +318,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : `${process.env.NEXT_PUBLIC_BASE_URL}/og-default.png`;
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://deadline.com';
-  const url = `${baseUrl}/event/${id}`;
+  const url = `${baseUrl}/event/${slug}`;
 
   const keywords = generateDynamicKeywords(eventDetails);
 
@@ -347,24 +387,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function EventPage({ params }: PageProps) {
+export default async function EventPage({ 
+  params 
+}: { 
+  params: { slug: string };
+}) {
   const resolvedParams = await Promise.resolve(params);
-  const id = resolvedParams.id;
+  const slug = resolvedParams.slug;
   
-  console.log('[EventPage] Processing id:', id);
-  
-  if (!id || typeof id !== 'string') {
-    console.error('[EventPage] Invalid id:', id);
+  if (!slug || typeof slug !== 'string') {
+    console.error('[EventPage] Invalid slug:', slug);
     notFound();
   }
 
   const [eventDetails, eventUpdates] = await Promise.all([
-    getEventDetails(id),
-    getEventUpdates(id)
+    getEventDetails(slug),
+    getEventUpdates(slug)
   ]);
 
   if (!eventDetails) {
-    console.error('[EventPage] Event not found for id:', id);
+    console.error('[EventPage] Event not found for slug:', slug);
     notFound();
   }
 
@@ -390,7 +432,7 @@ export default async function EventPage({ params }: PageProps) {
     updated_at: eventDetails.updated_at,
   };
 
-  const sourcesWithTitles = await getSourceTitles(safeEventDetails.sources, id);
+  const sourcesWithTitles = await getSourceTitles(safeEventDetails.sources, slug);
   const safeEventUpdates = Array.isArray(eventUpdates) ? eventUpdates : [];
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://deadline.com';
@@ -427,7 +469,7 @@ export default async function EventPage({ params }: PageProps) {
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `${baseUrl}/event/${id}`,
+      '@id': `${baseUrl}/event/${slug}`,
     },
     about: {
       '@type': 'Thing',
@@ -509,7 +551,7 @@ export default async function EventPage({ params }: PageProps) {
                     })}
                   </time>
                   <ShareDonateButtons 
-                    eventId={id}
+                    eventId={slug}
                     headline={safeEventDetails.headline}
                     upiId={upiId}
                     upiName={upiName}
