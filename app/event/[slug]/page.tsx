@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import Link from 'next/link';
 import ImageSlider from '../components/ImageSlider';
 import EventDetailsComponent from '../components/EventDetails';
 import SourcesComponent from '../components/Sources';
@@ -79,12 +80,6 @@ interface SourceWithTitle {
   favicon: string;
 }
 
-// Configuration for static generation
-export const dynamic = 'force-static';
-export const dynamicParams = true; // Allow dynamic params
-export const revalidate = false;
-export const fetchCache = 'force-cache';
-
 async function getEventDetails(slug: string): Promise<EventDetails | null> {
   try {
     const apiKey = process.env.API_SECRET_KEY;
@@ -105,7 +100,7 @@ async function getEventDetails(slug: string): Promise<EventDetails | null> {
 
     const response = await fetch(url, {
       next: { 
-        tags: [`event-${slug}`, `event-details-${slug}`],
+        tags: [`event-${slug}`],
         revalidate: false
       },
       headers: {
@@ -115,25 +110,25 @@ async function getEventDetails(slug: string): Promise<EventDetails | null> {
     });
 
     if (!response.ok) {
-      console.error('[getEventDetails] Response not OK:', response.status, 'for slug:', slug);
+      console.error('[getEventDetails] Response not OK:', response.status, response.statusText);
       return null;
     }
 
     const result: EventDetailsResponse = await response.json();
     
     if (!result.success || !result.data) {
-      console.error('[getEventDetails] Invalid response structure for slug:', slug);
+      console.error('[getEventDetails] Invalid response structure');
       return null;
     }
 
     return result.data;
   } catch (error) {
-    console.error('[getEventDetails] Exception for slug:', slug, error);
+    console.error('[getEventDetails] Exception:', error);
     return null;
   }
 }
 
-async function getEventUpdates(slug: string): Promise<EventUpdate[]> {
+async function getEventUpdates(eventId: string): Promise<EventUpdate[]> {
   try {
     const apiKey = process.env.API_SECRET_KEY;
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -143,10 +138,10 @@ async function getEventUpdates(slug: string): Promise<EventUpdate[]> {
     }
 
     const response = await fetch(
-      `${baseUrl}/api/get/updates?slug=${encodeURIComponent(slug)}&api_key=${apiKey}`,
+      `${baseUrl}/api/get/updates?event_id=${encodeURIComponent(eventId)}&api_key=${apiKey}`,
       {
         next: { 
-          tags: [`event-${slug}`, `event-updates-${slug}`],
+          tags: [`event-${eventId}`],
           revalidate: false
         },
         headers: {
@@ -168,7 +163,7 @@ async function getEventUpdates(slug: string): Promise<EventUpdate[]> {
   }
 }
 
-async function getSourceTitles(sources: string[], slug: string): Promise<SourceWithTitle[]> {
+async function getSourceTitles(sources: string[], eventId: string): Promise<SourceWithTitle[]> {
   const validSources = sources.filter(source => {
     if (!source || typeof source !== 'string' || source.trim() === '') return false;
     try {
@@ -193,7 +188,7 @@ async function getSourceTitles(sources: string[], slug: string): Promise<SourceW
           `${baseUrl}/api/get/title?url=${encodeURIComponent(trimmedUrl)}`,
           {
             next: {
-              tags: [`event-${slug}`, `source-${domain}`],
+              tags: [`event-${eventId}`, `source-${domain}`],
               revalidate: false
             },
             headers: {
@@ -256,42 +251,6 @@ function generateDynamicKeywords(eventDetails: EventDetails): string[] {
   }
 
   return keywords;
-}
-
-// Generate static paths for pre-rendering
-export async function generateStaticParams() {
-  try {
-    const apiKey = process.env.API_SECRET_KEY;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    
-    if (!apiKey || !baseUrl) {
-      console.error('[generateStaticParams] Missing environment variables');
-      return [];
-    }
-
-    // Fetch all event slugs from your API
-    const response = await fetch(
-      `${baseUrl}/api/get/all-slugs?api_key=${apiKey}`,
-      {
-        next: { revalidate: 3600 }, // Revalidate list every hour
-      }
-    );
-
-    if (!response.ok) {
-      console.error('[generateStaticParams] Failed to fetch slugs');
-      return [];
-    }
-
-    const data = await response.json();
-    const slugs = data.slugs || [];
-
-    return slugs.map((slug: string) => ({
-      slug: slug,
-    }));
-  } catch (error) {
-    console.error('[generateStaticParams] Exception:', error);
-    return [];
-  }
 }
 
 export async function generateMetadata({ 
@@ -395,20 +354,20 @@ export default async function EventPage({
   const resolvedParams = await Promise.resolve(params);
   const slug = resolvedParams.slug;
   
-  if (!slug || typeof slug !== 'string') {
-    console.error('[EventPage] Invalid slug:', slug);
+  if (!slug) {
     notFound();
   }
 
-  const [eventDetails, eventUpdates] = await Promise.all([
-    getEventDetails(slug),
-    getEventUpdates(slug)
-  ]);
+  const eventDetails = await getEventDetails(slug);
 
   if (!eventDetails) {
-    console.error('[EventPage] Event not found for slug:', slug);
     notFound();
   }
+
+  const [eventUpdates, sourcesWithTitles] = await Promise.all([
+    getEventUpdates(eventDetails.event_id),
+    getSourceTitles(eventDetails.sources || [], eventDetails.event_id)
+  ]);
 
   const safeEventDetails: EventDetails = {
     ...eventDetails,
@@ -432,7 +391,6 @@ export default async function EventPage({
     updated_at: eventDetails.updated_at,
   };
 
-  const sourcesWithTitles = await getSourceTitles(safeEventDetails.sources, slug);
   const safeEventUpdates = Array.isArray(eventUpdates) ? eventUpdates : [];
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://deadline.com';
@@ -518,15 +476,37 @@ export default async function EventPage({
         <header className="border-b border-black bg-white sticky top-0 z-50">
           <div className="max-w-full mx-auto px-6 py-3">
             <div className="flex items-center justify-between">
-              <a 
-                href="/" 
-                className="text-xl font-black tracking-tight uppercase text-black hover:opacity-80 transition-opacity" 
-                style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-                title="DEADLINE - Home"
-                aria-label="DEADLINE Homepage"
-              >
-                DEADLINE
-              </a>
+              <div className="flex items-center space-x-4">
+                <Link 
+                  href="/" 
+                  className="text-black hover:opacity-70 transition-opacity flex items-center"
+                  title="Back to homepage"
+                  aria-label="Back to homepage"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                  </svg>
+                </Link>
+                <a 
+                  href="/" 
+                  className="text-xl font-black tracking-tight uppercase text-black hover:opacity-80 transition-opacity" 
+                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+                  title="DEADLINE - Home"
+                  aria-label="DEADLINE Homepage"
+                >
+                  DEADLINE
+                </a>
+              </div>
               <nav className="flex space-x-4" aria-label="Article navigation">
                 <a href="#overview" className="text-xs font-normal text-black hover:underline transition-all duration-300 font-mono" title="View event overview">Overview</a>
                 <a href="#sources" className="text-xs font-normal text-black hover:underline transition-all duration-300 font-mono" title="View sources and references">Sources</a>
