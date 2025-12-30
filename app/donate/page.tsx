@@ -1,6 +1,7 @@
 import { Heart, Users, Target, Clock } from 'lucide-react';
 import DonateButton from './DonateButton';
 import { unstable_cache } from 'next/cache';
+import './donations.css';
 
 interface Donation {
   id: string;
@@ -233,16 +234,6 @@ export default async function DonationsPage() {
         </div>
       </footer>
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   );
 }
