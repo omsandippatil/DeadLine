@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 
 interface Event {
   event_id: number;
@@ -85,9 +86,8 @@ export async function POST(request: NextRequest) {
     }
     
     if (revalidate) {
-      // Trigger revalidation of the events cache
-      const { revalidateTag } = await import('next/cache');
-      revalidateTag('events-list');
+      // Trigger revalidation of the events cache using revalidatePath
+      revalidatePath('/api/get/events');
       
       return NextResponse.json(
         { 
