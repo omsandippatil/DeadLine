@@ -13,6 +13,7 @@ interface EventDetails {
   slug: string;
   headline: string;
   location: string;
+  incident_date: string | null;
   details: {
     overview: string;
     keyPoints: Array<{ label: string; value: string }>;
@@ -64,23 +65,71 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Query by slug if provided, otherwise by event_id
-    let query = supabase.from('event_details').select('*');
-    
-    if (slug) {
-      query = query.eq('slug', slug);
-    } else if (eventId) {
-      query = query.eq('event_id', eventId);
+    let finalEventId = eventId;
+    let slugValue = slug;
+
+    // If slug is provided, get the event_id from events table
+    if (slug && !eventId) {
+      const { data: eventData, error: eventError } = await supabase
+        .from('events')
+        .select('event_id')
+        .eq('slug', slug)
+        .single();
+
+      if (eventError) {
+        console.error('[API /api/get/details] Error fetching event_id from slug:', eventError);
+        
+        if (eventError.code === 'PGRST116') {
+          return NextResponse.json(
+            { success: false, error: 'Event not found' },
+            { status: 404 }
+          );
+        }
+        
+        return NextResponse.json(
+          { success: false, error: 'Failed to fetch event', details: eventError.message },
+          { status: 500 }
+        );
+      }
+
+      if (!eventData) {
+        return NextResponse.json(
+          { success: false, error: 'Event not found' },
+          { status: 404 }
+        );
+      }
+
+      finalEventId = eventData.event_id;
     }
 
-    const { data, error } = await query.single();
+    // Get slug and incident_date from events table
+    let incidentDate = null;
+    if (finalEventId) {
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('slug, incident_date')
+        .eq('event_id', finalEventId)
+        .single();
+
+      if (eventData) {
+        slugValue = eventData.slug;
+        incidentDate = eventData.incident_date;
+      }
+    }
+
+    // Now fetch the event details using event_id
+    const { data, error } = await supabase
+      .from('event_details')
+      .select('*')
+      .eq('event_id', finalEventId)
+      .single();
 
     if (error) {
       console.error('[API /api/get/details] Supabase error:', error);
       
       if (error.code === 'PGRST116') {
         return NextResponse.json(
-          { success: false, error: 'Event not found' },
+          { success: false, error: 'Event details not found' },
           { status: 404 }
         );
       }
@@ -93,7 +142,7 @@ export async function GET(request: NextRequest) {
 
     if (!data) {
       return NextResponse.json(
-        { success: false, error: 'Event not found' },
+        { success: false, error: 'Event details not found' },
         { status: 404 }
       );
     }
@@ -101,9 +150,10 @@ export async function GET(request: NextRequest) {
     // Ensure the response has the correct structure
     const eventDetails: EventDetails = {
       event_id: data.event_id,
-      slug: data.slug || '',
+      slug: slugValue || '',
       headline: data.headline || '',
       location: data.location || '',
+      incident_date: incidentDate || null,
       details: data.details || { overview: '', keyPoints: [] },
       accused: data.accused || { individuals: [], organizations: [] },
       victims: data.victims || { individuals: [], groups: [] },

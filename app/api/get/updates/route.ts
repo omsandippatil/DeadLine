@@ -31,20 +31,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // If slug is provided, first get the event_id
     let finalEventId = eventId;
-    
+
+    // If slug is provided, first get the event_id from events table
     if (slug && !eventId) {
       const { data: eventData, error: eventError } = await supabase
-        .from('event_details')
+        .from('events')
         .select('event_id')
         .eq('slug', slug)
         .single();
 
       if (eventError || !eventData) {
+        console.error('[API /api/get/updates] Error fetching event_id:', eventError);
         return NextResponse.json(
-          { success: false, error: 'Event not found', data: [], count: 0 },
-          { status: 404 }
+          { success: true, data: [], count: 0 },
+          { status: 200 }
         );
       }
 
@@ -67,10 +68,12 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[API /api/get/updates] Supabase error:', error);
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch updates', details: error.message, data: [], count: 0 },
-        { status: 500 }
-      );
+      // Return empty array instead of error for updates (non-critical)
+      return NextResponse.json({
+        success: true,
+        data: [],
+        count: 0
+      });
     }
 
     return NextResponse.json({
@@ -83,13 +86,11 @@ export async function GET(request: NextRequest) {
     console.error('[API /api/get/updates] Exception:', error);
     return NextResponse.json(
       { 
-        success: false,
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        success: true,
         data: [],
         count: 0
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

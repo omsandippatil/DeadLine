@@ -35,6 +35,7 @@ interface EventDetails {
   slug: string;
   location: string;
   headline: string;
+  incident_date: string | null;
   details: {
     overview: string;
     keyPoints?: KeyFact[];
@@ -113,24 +114,14 @@ async function getEventDetails(slug: string): Promise<EventDetails | null> {
 
     console.log('[getEventDetails] Response status:', response.status);
 
-    // Read the response as text first to debug
-    const responseText = await response.text();
-    console.log('[getEventDetails] Response body (first 500 chars):', responseText.substring(0, 500));
-
     if (!response.ok) {
       console.error('[getEventDetails] Response not OK:', response.status, response.statusText);
-      console.error('[getEventDetails] Response body:', responseText);
+      const text = await response.text();
+      console.error('[getEventDetails] Response body:', text);
       return null;
     }
 
-    // Try to parse the JSON
-    let result: EventDetailsResponse;
-    try {
-      result = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('[getEventDetails] JSON parse error. Response was:', responseText);
-      throw parseError;
-    }
+    const result: EventDetailsResponse = await response.json();
     console.log('[getEventDetails] Success:', result.success, 'Has data:', !!result.data);
     
     if (!result.success || !result.data) {
@@ -392,6 +383,7 @@ export default async function EventPage({ params }: Props) {
   const safeEventDetails: EventDetails = {
     ...eventDetails,
     slug: eventDetails.slug,
+    incident_date: eventDetails.incident_date || null,
     images: Array.isArray(eventDetails.images) ? eventDetails.images : [],
     sources: Array.isArray(eventDetails.sources) ? eventDetails.sources : [],
     location: eventDetails.location || 'Unknown Location',
@@ -542,13 +534,20 @@ export default async function EventPage({ params }: Props) {
                 <div className="flex items-center justify-between">
                   <time 
                     className="px-3 py-1 bg-white text-black text-xs uppercase tracking-wider border border-black font-mono"
-                    dateTime={safeEventDetails.created_at}
+                    dateTime={safeEventDetails.incident_date || safeEventDetails.created_at}
                   >
-                    {new Date(safeEventDetails.created_at || Date.now()).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
+                    {safeEventDetails.incident_date 
+                      ? new Date(safeEventDetails.incident_date).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })
+                      : new Date(safeEventDetails.created_at || Date.now()).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })
+                    }
                   </time>
                   <ShareDonateButtons 
                     eventId={slug}
