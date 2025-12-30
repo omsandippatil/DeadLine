@@ -5,6 +5,7 @@ import { Heart, X } from 'lucide-react';
 
 export default function DonateButton() {
   const [showQR, setShowQR] = useState(false);
+  const [qrLoaded, setQrLoaded] = useState(false);
 
   const upiId = process.env.NEXT_PUBLIC_UPI_ID || '';
   const upiName = process.env.NEXT_PUBLIC_UPI_NAME || '';
@@ -18,6 +19,7 @@ export default function DonateButton() {
       window.location.href = upiLink;
     } else {
       setShowQR(true);
+      setQrLoaded(false); // Reset loading state when opening modal
     }
   };
 
@@ -60,12 +62,29 @@ export default function DonateButton() {
               </button>
             </div>
 
-            <div className="flex justify-center mb-6 p-4 bg-gray-50 border border-black">
+            <div className="flex justify-center mb-6 p-4 bg-gray-50 border border-black relative">
+              {/* Skeleton Loader */}
+              {!qrLoaded && (
+                <div className="absolute inset-4 flex items-center justify-center">
+                  <div className="w-56 h-56 sm:w-64 sm:h-64 bg-gray-200 animate-pulse flex items-center justify-center">
+                    <div className="space-y-3">
+                      <div className="h-3 w-32 bg-gray-300 rounded mx-auto"></div>
+                      <div className="h-3 w-24 bg-gray-300 rounded mx-auto"></div>
+                      <div className="h-3 w-28 bg-gray-300 rounded mx-auto"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* QR Code Image */}
               <img
                 src={qrCodeUrl}
                 alt="UPI QR Code for donation"
-                className="w-56 h-56 sm:w-64 sm:h-64"
-                loading="lazy"
+                className={`w-56 h-56 sm:w-64 sm:h-64 transition-opacity duration-300 ${
+                  qrLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={() => setQrLoaded(true)}
+                loading="eager"
               />
             </div>
 
