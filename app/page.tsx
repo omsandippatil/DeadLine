@@ -14,32 +14,85 @@ interface Event {
   slug: string;
 }
 
-async function getInitialEvents(): Promise<Event[]> {
+interface CacheBatch {
+  events: Event[];
+  batchNumber: number;
+  totalBatches: number;
+}
+
+const BATCH_SIZE = 30;
+
+// Fetch ALL events and sort them by last_updated descending
+async function getAllEventsSorted(): Promise<Event[]> {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/get/events?limit=30&offset=0`,
-      {
-        next: { 
-          tags: ['events-list'],
-          revalidate: 3600
-        },
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const allEvents: Event[] = [];
+    let offset = 0;
+    const limit = 100; // Fetch in chunks of 100
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/get/events?limit=${limit}&offset=${offset}`,
+        {
+          next: { 
+            tags: ['events-list'],
+            revalidate: false // Only revalidate when API is called
+          },
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        console.error('Failed to fetch events:', response.statusText);
+        break;
       }
-    );
-    
-    if (!response.ok) {
-      console.error('Failed to fetch events:', response.statusText);
-      return [];
+      
+      const data = await response.json();
+      const fetchedEvents = data.events || [];
+      
+      if (fetchedEvents.length === 0) {
+        hasMore = false;
+      } else {
+        allEvents.push(...fetchedEvents);
+        offset += limit;
+        
+        // If we got less than limit, we've reached the end
+        if (fetchedEvents.length < limit) {
+          hasMore = false;
+        }
+      }
     }
-    
-    const data = await response.json();
-    return data.events || [];
+
+    // Sort by last_updated descending (most recent first)
+    return allEvents.sort((a, b) => {
+      const dateA = a.last_updated ? new Date(a.last_updated).getTime() : 0;
+      const dateB = b.last_updated ? new Date(b.last_updated).getTime() : 0;
+      return dateB - dateA;
+    });
   } catch (error) {
-    console.error('Error fetching events:', error);
+    console.error('Error fetching all events:', error);
     return [];
   }
+}
+
+// Create batches from sorted events
+function createBatches(events: Event[]): CacheBatch[] {
+  const batches: CacheBatch[] = [];
+  const totalBatches = Math.ceil(events.length / BATCH_SIZE);
+
+  for (let i = 0; i < totalBatches; i++) {
+    const start = i * BATCH_SIZE;
+    const end = start + BATCH_SIZE;
+    batches.push({
+      events: events.slice(start, end),
+      batchNumber: i + 1,
+      totalBatches
+    });
+  }
+
+  return batches;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -114,15 +167,17 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600;
+export const dynamic = 'force-static';
+export const revalidate = false; // Only revalidate when API is called
 
 export default async function DeadlineEventsPage() {
-  const initialEvents = await getInitialEvents();
+  // Fetch all events sorted by last_updated descending
+  const allEventsSorted = await getAllEventsSorted();
+  
+  // Create batches
+  const batches = createBatches(allEventsSorted);
   
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://deadline.com';
-  const imageUrl = `${baseUrl}/og-default.png`;
-  const description = 'Tracking the stories nobody else remembers. From sewer deaths to forgotten injustices—we document the lives that mattered, then disappeared from headlines.';
   
   const structuredData = {
     '@context': 'https://schema.org',
@@ -174,7 +229,7 @@ export default async function DeadlineEventsPage() {
           </div>
         </section>
         
-        <EventsClient initialEvents={initialEvents} />
+        <EventsClient batches={batches} allEvents={allEventsSorted} />
         
         <footer className="border-t border-black bg-white mt-24">
           <div className="max-w-7xl mx-auto px-6 py-12">
