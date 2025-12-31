@@ -154,16 +154,18 @@ export function EventsClient({ batches, allEvents }: EventsClientProps) {
   return (
     <>
       <section className="border-y border-black bg-white sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex flex-nowrap gap-3 justify-center items-center overflow-hidden">
-            <div className={`flex flex-nowrap gap-3 justify-center items-center transition-all duration-500 ease-out ${
-              searchActive ? 'opacity-0 -translate-x-8 pointer-events-none' : 'opacity-100 translate-x-0'
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
+          <div className="flex flex-nowrap gap-2 md:gap-3 justify-center items-center overflow-hidden relative">
+            <div className={`flex flex-nowrap gap-2 md:gap-3 justify-center items-center transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+              searchActive 
+                ? 'opacity-0 scale-95 -translate-x-full absolute pointer-events-none' 
+                : 'opacity-100 scale-100 translate-x-0 relative'
             }`}>
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleFilterChange(category)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 font-mono whitespace-nowrap ${
+                  className={`px-3 md:px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 font-mono whitespace-nowrap ${
                     activeFilter === category
                       ? 'bg-black text-white shadow-md'
                       : 'bg-gray-100 text-black hover:bg-gray-200'
@@ -174,17 +176,21 @@ export function EventsClient({ batches, allEvents }: EventsClientProps) {
               ))}
             </div>
             
-            <Suspense fallback={
-              <button className="px-4 py-2 rounded-full text-xs font-medium tracking-wide font-mono bg-gray-100 text-black">
-                SEARCH
-              </button>
-            }>
-              <SearchBar 
-                allEvents={allEvents} 
-                activeFilter={activeFilter}
-                onSearchResults={handleSearchResults}
-              />
-            </Suspense>
+            <div className={`transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+              searchActive ? 'w-full' : 'w-auto'
+            }`}>
+              <Suspense fallback={
+                <button className="px-4 py-2 rounded-full text-xs font-medium tracking-wide font-mono bg-gray-100 text-black">
+                  SEARCH
+                </button>
+              }>
+                <SearchBar 
+                  allEvents={allEvents} 
+                  activeFilter={activeFilter}
+                  onSearchResults={handleSearchResults}
+                />
+              </Suspense>
+            </div>
           </div>
         </div>
       </section>
