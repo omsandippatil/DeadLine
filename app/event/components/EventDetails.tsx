@@ -370,18 +370,18 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
             </div>
           )}
 
-          {eventUpdates.length > 0 && (
-            <div className="bg-white border border-black relative"
-                 style={{ height: bottomHeight ? `${bottomHeight}px` : 'auto' }}>
-              <div className="p-4 pb-2">
-                <h3 className="text-sm font-bold uppercase tracking-tight border-b border-black pb-2 mb-3 text-black font-mono">
-                  RECENT UPDATES
-                </h3>
-              </div>
-              <div className="px-4 pb-4 overflow-y-auto scrollbar-thin"
-                   style={{ height: bottomHeight ? `${bottomHeight - 70}px` : 'auto' }}>
-                <div ref={updatesContentRef} className="space-y-3">
-                  {eventUpdates.map((update) => (
+          <div className="bg-white border border-black relative"
+               style={{ height: bottomHeight ? `${bottomHeight}px` : 'auto' }}>
+            <div className="p-4 pb-2">
+              <h3 className="text-sm font-bold uppercase tracking-tight border-b border-black pb-2 mb-3 text-black font-mono">
+                RECENT UPDATES
+              </h3>
+            </div>
+            <div className="px-4 pb-4 overflow-y-auto scrollbar-thin"
+                 style={{ height: bottomHeight ? `${bottomHeight - 70}px` : 'auto' }}>
+              <div ref={updatesContentRef} className="space-y-3">
+                {eventUpdates.length > 0 ? (
+                  eventUpdates.map((update) => (
                     <article key={update.update_id} className="pb-3 border-b border-gray-200 last:border-b-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h4 className="text-xs font-bold text-black flex-1 font-mono">
@@ -399,14 +399,20 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                         <HighlightedText text={update.description} />
                       </p>
                     </article>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center">
+                    <p className="text-xs text-black font-mono leading-relaxed">
+                      We will update the news soon as we are updating it.
+                    </p>
+                  </div>
+                )}
               </div>
-              {updatesNeedsScroll && (
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white/95 to-transparent pointer-events-none"></div>
-              )}
             </div>
-          )}
+            {updatesNeedsScroll && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white/95 to-transparent pointer-events-none"></div>
+            )}
+          </div>
         </div>
       </div>
 

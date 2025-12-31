@@ -518,7 +518,7 @@ export function EventsClient({ initialEvents }: EventsClientProps) {
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between text-xs font-normal tracking-widest text-black font-mono">
-                      <time>{formatDate(event.incident_date)}</time>
+                      <time>{formatDate(event.last_updated)}</time>
                       <span className={`px-2 py-1 tracking-wide ${getStatusColor()}`}>
                         {getStatusLabel(event.status)}
                       </span>
