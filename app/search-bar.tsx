@@ -115,28 +115,28 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults }: 
 
   return (
     <div 
-      className={`relative transition-all duration-500 ease-out ${
+      className={`relative transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
         searchExpanded 
-          ? 'w-full max-w-2xl' 
+          ? 'w-full' 
           : 'w-auto'
       }`}
     >
-      <div className={`relative overflow-hidden transition-all duration-500 ease-out ${
+      <div className={`relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
         searchExpanded 
           ? 'w-full' 
           : 'w-auto'
       }`}>
         {searchExpanded ? (
-          <div className="w-full px-5 py-2.5 rounded-full border-2 border-black bg-white shadow-sm animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="flex items-center justify-between w-full gap-3">
+          <div className="w-full px-4 md:px-5 py-2.5 rounded-full border-2 border-black bg-white shadow-sm">
+            <div className="flex items-center justify-between w-full gap-2 md:gap-3">
               <Search className="w-4 h-4 text-gray-500 flex-shrink-0 transition-colors duration-300" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search by title, summary, date, or tags..."
-                className="flex-1 bg-transparent outline-none text-black placeholder-gray-400 font-mono text-xs transition-all duration-300"
+                placeholder="Search stories..."
+                className="flex-1 bg-transparent outline-none text-black placeholder-gray-400 font-mono text-xs md:text-sm transition-all duration-300 min-w-0"
               />
               <button
                 onClick={toggleSearch}
@@ -150,7 +150,7 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults }: 
         ) : (
           <button
             onClick={toggleSearch}
-            className="px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 font-mono bg-gray-100 text-black hover:bg-gray-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+            className="px-4 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 font-mono bg-gray-100 text-black hover:bg-gray-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md whitespace-nowrap"
           >
             SEARCH
           </button>
