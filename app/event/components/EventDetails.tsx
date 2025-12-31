@@ -16,7 +16,9 @@ interface TimelineEvent {
 
 interface TimelineEntry {
   date: string;
-  context: string;
+  event?: string;
+  details?: string;
+  context?: string;
   events?: TimelineEvent[];
 }
 
@@ -126,8 +128,11 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
         const timelineHeight = timelineContentRef.current?.scrollHeight || 0;
         const updatesHeight = updatesContentRef.current?.scrollHeight || 0;
         
-        if (timelineHeight > 0 && updatesHeight > 0) {
-          setBottomHeight(Math.min(timelineHeight, updatesHeight) + 80);
+        // Set minimum height for updates placeholder
+        const minUpdatesHeight = eventUpdates.length === 0 ? 350 : updatesHeight;
+        
+        if (timelineHeight > 0 && minUpdatesHeight > 0) {
+          setBottomHeight(Math.min(timelineHeight, minUpdatesHeight) + 80);
         }
       };
 
@@ -138,7 +143,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
       window.addEventListener('resize', calculateHeights);
       return () => window.removeEventListener('resize', calculateHeights);
     }
-  }, [loading]);
+  }, [loading, eventUpdates.length]);
 
   if (loading) {
     return <Skeleton />;
@@ -329,11 +334,27 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                               </span>
                             </div>
                           )}
-                          <p className="text-[11px] font-bold leading-relaxed mb-2 text-black font-mono">
-                            <HighlightedText text={entry.context} />
-                          </p>
+                          
+                          {entry.event && (
+                            <p className="text-[11px] font-bold leading-relaxed mb-2 text-black font-mono">
+                              <HighlightedText text={entry.event} />
+                            </p>
+                          )}
+                          
+                          {entry.context && (
+                            <p className="text-[11px] font-bold leading-relaxed mb-2 text-black font-mono">
+                              <HighlightedText text={entry.context} />
+                            </p>
+                          )}
+                          
+                          {entry.details && (
+                            <p className="text-[11px] leading-relaxed mb-2 text-black font-mono">
+                              <HighlightedText text={entry.details} />
+                            </p>
+                          )}
+                          
                           {entry.events && entry.events.length > 0 && (
-                            <div className="space-y-2 pl-2 border-l border-gray-300">
+                            <div className="space-y-2 pl-2 border-l border-gray-300 mt-2">
                               {entry.events.map((evt, evtIndex) => (
                                 <div key={evtIndex}>
                                   {evt.time && (
@@ -401,13 +422,13 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                     </article>
                   ))
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center space-y-8">
+                  <div className="h-full min-h-[270px] flex flex-col items-center justify-center text-center space-y-8">
                     <div className="space-y-3">
                       <div className="inline-block bg-black text-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider font-mono">
-                        NO UPDATES
+                        INVESTIGATION IN PROGRESS
                       </div>
                       <p className="text-[11px] text-black font-mono leading-relaxed max-w-xs mx-auto">
-                        Monitoring in progress. Updates will be published as information becomes available.
+                        Our investigative team is actively monitoring this case. Updates will be published as new information emerges from verified sources.
                       </p>
                     </div>
                     
@@ -415,7 +436,7 @@ export default function EventDetailsComponent({ eventDetails, eventUpdates }: Ev
                     
                     <div className="space-y-3">
                       <p className="text-[11px] text-black font-mono leading-relaxed max-w-xs mx-auto">
-                        Support investigative journalism
+                        Support independent investigative journalism
                       </p>
                       <a 
                         href="/donate"
