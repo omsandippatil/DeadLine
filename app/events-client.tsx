@@ -56,6 +56,7 @@ function EventCardSkeleton() {
 export function EventsClient({ initialEvents }: EventsClientProps) {
   const [displayedEvents, setDisplayedEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
   const [clickedSlug, setClickedSlug] = useState<string | null>(null);
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -149,6 +150,7 @@ export function EventsClient({ initialEvents }: EventsClientProps) {
     });
     
     setDisplayedEvents(sortedInitial.slice(0, ITEMS_PER_PAGE));
+    setInitialLoading(false);
   }, [initialEvents, sortEventsByDate, buildSearchIndex]);
 
   // Fetch more events from API
@@ -321,7 +323,7 @@ export function EventsClient({ initialEvents }: EventsClientProps) {
     fetchMoreEvents
   ]);
 
-  // Check if more content available
+  // Check if more content available - FIXED TYPE ERROR
   const hasMore = useCallback((): boolean => {
     const currentEvents = getCurrentEvents();
     const cacheKey = getCacheKey(activeFilter);
@@ -329,7 +331,7 @@ export function EventsClient({ initialEvents }: EventsClientProps) {
     
     return (
       displayedEvents.length < currentEvents.length ||
-      (cache?.hasMore && !searchQuery.trim())
+      (Boolean(cache?.hasMore) && !searchQuery.trim())
     );
   }, [getCurrentEvents, displayedEvents.length, activeFilter, getCacheKey, searchQuery]);
 
@@ -420,10 +422,10 @@ export function EventsClient({ initialEvents }: EventsClientProps) {
       </section>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {isSearching ? (
+        {(initialLoading || isSearching) ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, index) => (
-              <EventCardSkeleton key={`search-skeleton-${index}`} />
+              <EventCardSkeleton key={`skeleton-${index}`} />
             ))}
           </div>
         ) : displayedEvents.length === 0 ? (
