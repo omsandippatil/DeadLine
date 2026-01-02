@@ -283,9 +283,6 @@ export default async function DeadlineEventsPage() {
             <p className="text-lg font-normal text-black tracking-wide font-mono mb-2">
               Museum of Temporary Truths
             </p>
-            <p className="text-sm text-gray-700 max-w-3xl mx-auto mt-4 leading-relaxed">
-              Documenting forgotten lives, sewer deaths, and untold stories that vanished from headlines. Every life has a voice.
-            </p>
           </div>
         </header>
         
