@@ -122,7 +122,7 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
         className={`relative flex items-center overflow-hidden rounded-full bg-gray-100 transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] h-[36px] ${
           isExpanded 
             ? 'w-full' 
-            : 'w-auto cursor-pointer'
+            : 'w-auto cursor-pointer hover:bg-gray-200'
         }`}
         style={{
           transform: isExpanded ? 'scale(1)' : 'scale(1)',
@@ -132,13 +132,11 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
         onMouseEnter={(e) => {
           if (!isExpanded) {
             e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.backgroundColor = 'rgb(229, 231, 235)';
           }
         }}
         onMouseLeave={(e) => {
           if (!isExpanded) {
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.backgroundColor = 'rgb(243, 244, 246)';
           }
         }}
         onMouseDown={(e) => {
@@ -152,9 +150,14 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
           }
         }}
       >
+        {/* Left padding for button text when collapsed */}
+        <div className={`flex-shrink-0 transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+          isExpanded ? 'w-0' : 'w-3 md:w-4'
+        }`}></div>
+
         {/* Search Icon */}
         <div className={`flex items-center justify-center flex-shrink-0 transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          isExpanded ? 'pl-3 md:pl-4 opacity-100 scale-100' : 'pl-0 opacity-0 scale-0 w-0'
+          isExpanded ? 'w-auto opacity-100 scale-100 pl-3 md:pl-4' : 'w-0 opacity-0 scale-0'
         }`}>
           <Search className="w-4 h-4 text-black transition-all duration-300 ease-out" />
         </div>
@@ -180,8 +183,8 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
         <div className="relative flex items-center pr-3 md:pr-4 flex-shrink-0">
           {/* SEARCH Text */}
           <div 
-            className={`absolute right-3 md:right-4 transition-all duration-300 ease-out ${
-              isExpanded ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
+            className={`transition-all duration-300 ease-out ${
+              isExpanded ? 'opacity-0 scale-75 pointer-events-none absolute' : 'opacity-100 scale-100'
             }`}
           >
             <span className="text-xs font-medium tracking-wide text-black font-mono whitespace-nowrap">
@@ -192,7 +195,7 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
           {/* Close Button */}
           <div 
             className={`transition-all duration-300 ease-out ${
-              isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'
+              isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none absolute'
             }`}
             style={{
               transitionDelay: isExpanded ? '150ms' : '0ms'
