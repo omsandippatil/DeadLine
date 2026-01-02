@@ -353,20 +353,20 @@ export default function ImageSlider({ images }: ImageSliderProps) {
               alt={`Gallery image ${(fullscreenImage % images.length) + 1} - Fullscreen view`}
               className="select-none"
               style={{
-                maxWidth: '90vw',
-                maxHeight: '90vh',
-                minWidth: '50vw',
-                minHeight: '50vh',
+                maxWidth: '95vw',
+                maxHeight: '95vh',
+                minWidth: '60vw',
+                minHeight: '60vh',
                 objectFit: 'contain',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
               }}
               draggable={false}
             />
             
-            {/* Close button - top right of image */}
+            {/* Close button - top right inside image */}
             <button
               onClick={handleCloseFullscreen}
-              className="absolute -top-12 -right-12 bg-white text-black p-3 transition-all duration-300 hover:bg-gray-200 hover:scale-110 active:scale-95"
+              className="absolute top-4 right-4 bg-white bg-opacity-95 text-black p-3 transition-all duration-300 hover:bg-opacity-100 hover:scale-110 active:scale-95"
               style={{
                 opacity: showControls ? 1 : 0,
                 transform: showControls ? 'translate(0, 0)' : 'translate(8px, -8px)',
@@ -382,13 +382,13 @@ export default function ImageSlider({ images }: ImageSliderProps) {
               </svg>
             </button>
 
-            {/* Previous button - left edge of image */}
+            {/* Previous button - left edge inside image */}
             <button
               onClick={handlePrevImage}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 bg-white text-black p-4 transition-all duration-300 hover:bg-gray-200 hover:scale-110 active:scale-95"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-95 text-black p-4 transition-all duration-300 hover:bg-opacity-100 hover:scale-110 active:scale-95"
               style={{
                 opacity: showControls ? 1 : 0,
-                transform: showControls ? 'translate(-64px, -50%)' : 'translate(-80px, -50%)',
+                transform: showControls ? 'translate(0, -50%)' : 'translate(-8px, -50%)',
                 pointerEvents: showControls ? 'auto' : 'none',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
@@ -400,13 +400,13 @@ export default function ImageSlider({ images }: ImageSliderProps) {
               </svg>
             </button>
 
-            {/* Next button - right edge of image */}
+            {/* Next button - right edge inside image */}
             <button
               onClick={handleNextImage}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 bg-white text-black p-4 transition-all duration-300 hover:bg-gray-200 hover:scale-110 active:scale-95"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-95 text-black p-4 transition-all duration-300 hover:bg-opacity-100 hover:scale-110 active:scale-95"
               style={{
                 opacity: showControls ? 1 : 0,
-                transform: showControls ? 'translate(64px, -50%)' : 'translate(80px, -50%)',
+                transform: showControls ? 'translate(0, -50%)' : 'translate(8px, -50%)',
                 pointerEvents: showControls ? 'auto' : 'none',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
@@ -418,9 +418,9 @@ export default function ImageSlider({ images }: ImageSliderProps) {
               </svg>
             </button>
 
-            {/* Counter - bottom of image */}
+            {/* Counter - bottom inside image */}
             <div 
-              className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-white text-black px-6 py-3 text-sm font-mono font-bold"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white bg-opacity-95 text-black px-6 py-3 text-sm font-mono font-bold"
               style={{
                 opacity: showControls ? 1 : 0,
                 transform: showControls ? 'translate(-50%, 0)' : 'translate(-50%, 8px)',

@@ -119,24 +119,26 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
   return (
     <div className="relative h-[36px] flex items-center">
       <div 
-        className={`relative flex items-center overflow-hidden rounded-full transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] h-[36px] ${
+        className={`relative flex items-center overflow-hidden rounded-full bg-gray-100 transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] h-[36px] ${
           isExpanded 
-            ? 'w-full bg-white border-2 border-black shadow-lg' 
-            : 'w-auto bg-gray-100 hover:bg-gray-200 cursor-pointer shadow-sm hover:shadow-md'
+            ? 'w-full' 
+            : 'w-auto cursor-pointer'
         }`}
         style={{
           transform: isExpanded ? 'scale(1)' : 'scale(1)',
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.15s ease-out, background-color 0.2s ease-out'
         }}
         onClick={!isExpanded ? onToggle : undefined}
         onMouseEnter={(e) => {
           if (!isExpanded) {
             e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.backgroundColor = 'rgb(229, 231, 235)';
           }
         }}
         onMouseLeave={(e) => {
           if (!isExpanded) {
             e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.backgroundColor = 'rgb(243, 244, 246)';
           }
         }}
         onMouseDown={(e) => {
@@ -151,12 +153,10 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
         }}
       >
         {/* Search Icon */}
-        <div className={`flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isExpanded ? 'pl-4 pr-2' : 'pl-3 md:pl-4 pr-2'
+        <div className={`flex items-center justify-center flex-shrink-0 transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+          isExpanded ? 'pl-3 md:pl-4' : 'pl-3 md:pl-4'
         }`}>
-          <Search className={`w-4 h-4 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            isExpanded ? 'text-gray-500' : 'text-black'
-          }`} />
+          <Search className="w-4 h-4 text-black transition-all duration-300 ease-out" />
         </div>
 
         {/* Input Field */}
@@ -166,37 +166,41 @@ export default function SearchBar({ allEvents, activeFilter, onSearchResults, is
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search stories..."
-          className={`bg-transparent text-black placeholder-gray-400 font-mono text-xs md:text-sm outline-none transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`bg-transparent text-black placeholder-gray-400 font-mono text-xs md:text-sm outline-none transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
             isExpanded 
-              ? 'w-full opacity-100 pr-2 translate-x-0' 
-              : 'w-0 opacity-0 pointer-events-none -translate-x-2'
+              ? 'flex-1 opacity-100 px-2 translate-x-0' 
+              : 'w-0 opacity-0 pointer-events-none -translate-x-4'
           }`}
           style={{
-            transitionDelay: isExpanded ? '100ms' : '0ms'
+            transitionDelay: isExpanded ? '80ms' : '0ms'
           }}
         />
 
-        {/* Button Text / Close Button */}
-        <div className={`flex items-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isExpanded ? 'pr-2 opacity-100 translate-x-0' : 'pr-3 md:pr-4 opacity-100 translate-x-0'
-        }`}>
-          <div className={`transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            isExpanded ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'
-          }`}>
+        {/* Button Text / Close Button Container */}
+        <div className="relative flex items-center pr-3 md:pr-4 flex-shrink-0">
+          {/* SEARCH Text */}
+          <div 
+            className={`absolute right-3 md:right-4 transition-all duration-300 ease-out ${
+              isExpanded ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'
+            }`}
+          >
             <span className="text-xs font-medium tracking-wide text-black font-mono whitespace-nowrap">
               SEARCH
             </span>
           </div>
           
-          <div className={`transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            isExpanded ? 'opacity-100 w-auto scale-100' : 'opacity-0 w-0 scale-75 overflow-hidden'
-          }`}
-          style={{
-            transitionDelay: isExpanded ? '200ms' : '0ms'
-          }}>
+          {/* Close Button */}
+          <div 
+            className={`transition-all duration-300 ease-out ${
+              isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'
+            }`}
+            style={{
+              transitionDelay: isExpanded ? '150ms' : '0ms'
+            }}
+          >
             <button
               onClick={handleClear}
-              className="w-6 h-6 rounded-full bg-black text-white hover:bg-gray-800 transition-all duration-200 ease-out hover:scale-110 active:scale-90 flex items-center justify-center"
+              className="w-6 h-6 rounded-full bg-black text-white hover:bg-gray-800 transition-all duration-150 ease-out hover:scale-110 active:scale-90 flex items-center justify-center"
               aria-label="Close search"
             >
               <X className="w-3.5 h-3.5" />
