@@ -190,8 +190,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     verification: {
       google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
-      yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
-      yahoo: process.env.NEXT_PUBLIC_YAHOO_VERIFICATION,
     },
     alternates: {
       canonical: baseUrl,
@@ -204,6 +202,8 @@ export async function generateMetadata(): Promise<Metadata> {
     other: {
       'msapplication-TileColor': '#000000',
       'theme-color': '#ffffff',
+      'yandex-verification': process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+      'msvalidate.01': process.env.NEXT_PUBLIC_BING_VERIFICATION,
     }
   };
 }
