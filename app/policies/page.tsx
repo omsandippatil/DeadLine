@@ -1,65 +1,6 @@
-import { Metadata } from 'next';
+'use client';
+
 import Link from 'next/link';
-
-export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://deadline.com';
-  
-  const title = 'Policies - DEADLINE Museum of Temporary Truths';
-  const description = 'Our policies on data privacy, news documentation, and information transparency. DEADLINE does not store user data or require login. We document news from multiple verified sources.';
-  const imageUrl = `${baseUrl}/og-default.png`;
-
-  return {
-    title,
-    description,
-    keywords: [
-      'DEADLINE policies',
-      'news documentation policy',
-      'data privacy',
-      'news archive policy',
-      'no login policy',
-      'news sources',
-      'documentation transparency',
-      'archived news policy',
-      'news preservation ethics'
-    ],
-    authors: [{ name: 'DEADLINE', url: baseUrl }],
-    creator: 'DEADLINE',
-    publisher: 'DEADLINE',
-    openGraph: {
-      type: 'website',
-      url: `${baseUrl}/policies`,
-      title: 'Policies - DEADLINE Museum of Temporary Truths',
-      description,
-      siteName: 'DEADLINE - Museum of Temporary Truths',
-      locale: 'en_US',
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: 'DEADLINE Policies - Museum of Temporary Truths',
-          type: 'image/png',
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: 'Policies - DEADLINE',
-      description,
-      images: [imageUrl],
-      creator: '@deadline',
-      site: '@deadline',
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-    alternates: {
-      canonical: `${baseUrl}/policies`,
-    },
-    metadataBase: new URL(baseUrl),
-  };
-}
 
 export default function PoliciesPage() {
   return (
@@ -249,6 +190,7 @@ export default function PoliciesPage() {
             <nav className="flex justify-center gap-8 text-sm font-mono mb-8" aria-label="Footer navigation">
               <a href="/about" className="text-black hover:underline" title="About DEADLINE - Our Mission">About</a>
               <a href="/report" className="text-black hover:underline" title="Report a Story">Report</a>
+              <a href="/policies" className="text-black hover:underline" title="Our Policies">Policies</a>
               <a href="/donate" className="text-black hover:underline" title="Support Our Work">Donate</a>
             </nav>
             <p className="text-xs text-gray-600 font-mono">
