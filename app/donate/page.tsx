@@ -66,9 +66,9 @@ export default function DonationsPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <header className="border-b border-black bg-white sticky top-0 z-40">
-        <div className="px-4 sm:px-6 py-3">
-          <div className="flex items-center justify-between max-w-5xl mx-auto">
+      <header className="border-b border-black bg-white sticky top-0 z-50">
+        <div className="max-w-full mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
                 onClick={() => {
@@ -100,7 +100,7 @@ export default function DonationsPage() {
               </button>
               <a
                 href="/"
-                className="text-lg sm:text-xl font-black tracking-tight uppercase text-black hover:opacity-80 transition-opacity"
+                className="text-xl font-black tracking-tight uppercase text-black hover:opacity-80 transition-opacity"
                 style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 title="DEADLINE - Museum of Temporary Truths"
                 aria-label="DEADLINE - Museum of Temporary Truths Homepage"
@@ -112,54 +112,54 @@ export default function DonationsPage() {
         </div>
       </header>
 
-      <main className="flex-1 px-4 sm:px-6 py-6 max-w-5xl mx-auto w-full">
-        <div className="mb-6 space-y-2">
+      <main className="flex-1 px-6 py-8 max-w-5xl mx-auto w-full">
+        <div className="mb-8">
           <h1 
-            className="text-2xl sm:text-3xl font-bold tracking-tight text-black leading-tight"
+            className="text-3xl sm:text-4xl font-black tracking-tight text-black mb-3"
             style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
           >
             Support Our Mission
           </h1>
-          <p className="text-black font-mono text-xs sm:text-sm leading-relaxed">
+          <p className="text-black font-mono text-sm leading-relaxed">
             Help us document stories the world forgot.
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white border border-black p-4 sm:p-5 hover:shadow-lg transition-all duration-300 group">
-            <Heart className="w-5 h-5 text-black mb-3 group-hover:scale-110 transition-transform duration-300" />
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-white border border-black p-4 hover:shadow-lg transition-all duration-300 group">
+            <Heart className="w-5 h-5 text-black mb-2 group-hover:scale-110 transition-transform duration-300" />
             <div className="text-xs font-mono text-gray-600 mb-1 tracking-wide">RAISED</div>
-            <div className="text-lg sm:text-2xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <div className="text-xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               ₹{data.totalAmount.toLocaleString('en-IN')}
             </div>
           </div>
 
-          <div className="bg-white border border-black p-4 sm:p-5 hover:shadow-lg transition-all duration-300 group">
-            <Target className="w-5 h-5 text-black mb-3 group-hover:scale-110 transition-transform duration-300" />
+          <div className="bg-white border border-black p-4 hover:shadow-lg transition-all duration-300 group">
+            <Target className="w-5 h-5 text-black mb-2 group-hover:scale-110 transition-transform duration-300" />
             <div className="text-xs font-mono text-gray-600 mb-1 tracking-wide">GOAL</div>
-            <div className="text-lg sm:text-2xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <div className="text-xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               ₹{data.goal.toLocaleString('en-IN')}
             </div>
           </div>
 
-          <div className="bg-white border border-black p-4 sm:p-5 hover:shadow-lg transition-all duration-300 group">
-            <Users className="w-5 h-5 text-black mb-3 group-hover:scale-110 transition-transform duration-300" />
+          <div className="bg-white border border-black p-4 hover:shadow-lg transition-all duration-300 group">
+            <Users className="w-5 h-5 text-black mb-2 group-hover:scale-110 transition-transform duration-300" />
             <div className="text-xs font-mono text-gray-600 mb-1 tracking-wide">DONORS</div>
-            <div className="text-lg sm:text-2xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <div className="text-xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               {data.donorCount}
             </div>
           </div>
         </div>
 
-        <div className="mb-8">
-          <div className="bg-white border border-black p-6">
-            <div className="flex justify-between items-center mb-4">
+        <div className="mb-6">
+          <div className="bg-white border border-black p-5">
+            <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-mono text-gray-600 tracking-wide">PROGRESS</span>
-              <span className="text-2xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              <span className="text-xl font-bold text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                 {progress.toFixed(1)}%
               </span>
             </div>
-            <div className="w-full h-3 border border-black bg-gray-50 overflow-hidden mb-4">
+            <div className="w-full h-3 border border-black bg-gray-50 overflow-hidden mb-3">
               <div
                 className="h-full bg-black transition-all duration-700 ease-out"
                 style={{ width: `${progress}%` }}
@@ -173,7 +173,7 @@ export default function DonationsPage() {
 
         <DonateButton />
 
-        <div className="bg-gray-50 border border-black p-4 mb-8 flex items-start gap-3">
+        <div className="bg-gray-50 border border-black p-4 mb-6 flex items-start gap-3">
           <Clock className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
           <p className="text-xs font-mono text-gray-600 leading-relaxed">
             Donations may take a few minutes to appear. Page auto-refreshes every minute.
@@ -182,14 +182,14 @@ export default function DonationsPage() {
 
         <div>
           <h2 
-            className="text-xl sm:text-2xl font-bold text-black mb-6 tracking-tight"
+            className="text-2xl font-black text-black mb-5 tracking-tight"
             style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
           >
             Recent Supporters
           </h2>
 
           {data.donations && data.donations.length > 0 ? (
-            <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto">
               {data.donations.map((donation, index) => (
                 <div
                   key={donation.id}
@@ -199,15 +199,15 @@ export default function DonationsPage() {
                   }}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <div className="font-bold text-sm sm:text-base text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                    <div className="font-bold text-sm text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                       {donation.is_anonymous ? 'Anonymous' : donation.donor_name}
                     </div>
-                    <div className="font-bold text-base sm:text-lg text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                    <div className="font-bold text-base text-black" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
                       ₹{Number(donation.amount).toLocaleString('en-IN')}
                     </div>
                   </div>
                   {donation.message && (
-                    <p className="text-xs sm:text-sm font-mono text-gray-700 mb-2 leading-relaxed">
+                    <p className="text-xs font-mono text-gray-700 mb-2 leading-relaxed">
                       "{donation.message}"
                     </p>
                   )}

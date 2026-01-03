@@ -6,7 +6,7 @@ export default function PoliciesPage() {
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-black bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-3">
+        <div className="max-w-full mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
@@ -51,129 +51,129 @@ export default function PoliciesPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-16">
-        <h1 className="text-5xl md:text-6xl font-black tracking-tight text-black mb-8" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-black mb-12" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
           POLICIES
         </h1>
 
-        <div className="space-y-12">
+        <div className="space-y-10">
           <section>
-            <h2 className="text-3xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h2 className="text-2xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               Data Privacy
             </h2>
-            <div className="space-y-4 text-black font-mono text-base leading-relaxed">
+            <div className="space-y-3 text-black font-mono text-sm leading-relaxed text-justify">
               <p>
-                DEADLINE does not store any personal user data. We do not have a login system, user accounts, or any form of user registration. Your privacy is inherently protected by our design.
+                DEADLINE operates without collecting or storing personal user data. We maintain no login system, user accounts, or registration mechanisms. Privacy protection is embedded in our platform architecture by design.
               </p>
               <p>
-                We use Vercel Analytics to understand how our platform is used. This analytics service collects anonymous usage data that helps us improve the documentation experience. No personally identifiable information is collected or stored through this service.
+                We utilize Vercel Analytics to monitor platform usage patterns. This service collects anonymized usage statistics that inform platform improvements. No personally identifiable information is captured or retained through this analytics implementation.
               </p>
               <p>
-                We do not use cookies, tracking pixels, or any other data collection mechanisms beyond the anonymous analytics provided by Vercel.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-3xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-              News Documentation Policy
-            </h2>
-            <div className="space-y-4 text-black font-mono text-base leading-relaxed">
-              <p>
-                DEADLINE is a news archival and documentation platform. We collect news from multiple verified sources, analyze the information, and maintain it in a structured format for public access and reference.
-              </p>
-              <p>
-                Our documentation process involves gathering information from various news outlets, official reports, public records, and credible sources. We cross-reference information across multiple sources to ensure accuracy and completeness.
-              </p>
-              <p>
-                Each documented event includes citations and links to original source materials, allowing users to verify information independently and access the primary sources.
+                Our platform operates without cookies, tracking pixels, or auxiliary data collection systems beyond the anonymous analytics provided by Vercel infrastructure.
               </p>
             </div>
           </section>
 
           <section>
-            <h2 className="text-3xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-              News Sources
+            <h2 className="text-2xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              News Documentation Methodology
             </h2>
-            <div className="space-y-4 text-black font-mono text-base leading-relaxed">
+            <div className="space-y-3 text-black font-mono text-sm leading-relaxed text-justify">
               <p>
-                We gather news and information from a wide range of sources including but not limited to:
+                DEADLINE functions as a systematic news archival and documentation infrastructure. We aggregate information from verified sources, conducting comprehensive analysis to maintain structured records accessible to the public.
               </p>
-              <ul className="list-none space-y-2 pl-0">
+              <p>
+                Our documentation methodology encompasses information gathering from diverse news organizations, official governmental reports, public records, and verified sources. We implement cross-referencing protocols across multiple sources to ensure documentation accuracy and completeness.
+              </p>
+              <p>
+                Each documented event maintains complete citations with direct links to source materials, enabling independent verification and primary source access for all users.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              Information Sources
+            </h2>
+            <div className="space-y-3 text-black font-mono text-sm leading-relaxed text-justify">
+              <p>
+                Our information acquisition spans multiple categories of verified sources:
+              </p>
+              <ul className="list-none space-y-1.5 pl-0">
                 <li>• National and regional news publications</li>
-                <li>• International news agencies</li>
+                <li>• International news agencies and wire services</li>
                 <li>• Government reports and official statements</li>
-                <li>• Court documents and legal filings</li>
-                <li>• Academic research and studies</li>
-                <li>• Human rights organizations and NGO reports</li>
-                <li>• Local news outlets and community journalism</li>
-                <li>• Press releases and official communications</li>
-                <li>• Public records and freedom of information requests</li>
+                <li>• Court documents and legal proceedings</li>
+                <li>• Academic research publications and studies</li>
+                <li>• Human rights organizations and NGO documentation</li>
+                <li>• Local journalism and community news outlets</li>
+                <li>• Official press releases and institutional communications</li>
+                <li>• Public records and freedom of information disclosures</li>
               </ul>
               <p>
-                All sources are cited and linked within each documented event. We prioritize credible, verifiable sources and maintain transparency about where information originates.
+                All sources receive proper citation and linking within documented events. We maintain rigorous standards for source credibility and verifiability while ensuring complete transparency regarding information origins.
               </p>
             </div>
           </section>
 
           <section>
-            <h2 className="text-3xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h2 className="text-2xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               Disclaimer
             </h2>
-            <div className="space-y-4 text-black font-mono text-base leading-relaxed">
+            <div className="space-y-3 text-black font-mono text-sm leading-relaxed text-justify">
               <p>
-                DEADLINE presents news and information gathered from various sources. We do not take responsibility for the accuracy, completeness, or reliability of the original news sources.
+                DEADLINE presents aggregated information derived from various sources. We assume no responsibility for the accuracy, completeness, or reliability of original source materials.
               </p>
               <p>
-                We are a documentation and archival platform. The information presented on DEADLINE is compiled from publicly available sources and is intended for informational and archival purposes only.
+                This platform operates as a documentation and archival system. Information presented serves informational and archival purposes exclusively, compiled from publicly accessible sources.
               </p>
               <p>
-                Users should independently verify information and consult original sources before making decisions based on the content presented here.
+                Users bear responsibility for independent verification of information and consultation of original sources before making decisions based on presented content.
               </p>
               <p>
-                DEADLINE does not endorse, support, or oppose any individuals, organizations, or viewpoints mentioned in the documented events. We maintain neutrality in our documentation process.
+                DEADLINE maintains strict neutrality. We neither endorse nor oppose individuals, organizations, or viewpoints referenced in documented events. Our documentation process remains impartial and objective.
               </p>
             </div>
           </section>
 
           <section>
-            <h2 className="text-3xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h2 className="text-2xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               Updates and Corrections
             </h2>
-            <div className="space-y-4 text-black font-mono text-base leading-relaxed">
+            <div className="space-y-3 text-black font-mono text-sm leading-relaxed text-justify">
               <p>
-                We maintain a comprehensive update log for each documented event. When new information becomes available or corrections are necessary, we update the relevant documentation and clearly mark the updates with timestamps.
+                We maintain comprehensive update logs for each documented event. Upon receiving new information or identifying necessary corrections, we implement documentation updates with clear timestamp markers.
               </p>
               <p>
-                Update logs include the date of the update, the nature of the change, and the source of new information. This ensures transparency in our documentation process and allows users to track how information evolves over time.
+                Update logs document the modification date, change nature, and information sources. This protocol ensures documentation transparency and enables users to track information evolution across time.
               </p>
               <p>
-                If you believe any documented information is inaccurate or incomplete, please contact us through our report page with supporting evidence and source citations.
+                Concerns regarding documentation accuracy or completeness should be directed to our report page, accompanied by supporting evidence and source citations.
               </p>
             </div>
           </section>
 
           <section>
-            <h2 className="text-3xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h2 className="text-2xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               Content Usage
             </h2>
-            <div className="space-y-4 text-black font-mono text-base leading-relaxed">
+            <div className="space-y-3 text-black font-mono text-sm leading-relaxed text-justify">
               <p>
-                The documentation and compilations on DEADLINE are provided for educational, research, and informational purposes. Users are encouraged to cite original sources when referencing information from this platform.
+                Documentation and compilations on DEADLINE serve educational, research, and informational objectives. Users are encouraged to cite original sources when referencing platform information.
               </p>
               <p>
-                While we organize and structure publicly available information, the underlying news content belongs to the original publishers and is subject to their respective copyrights and terms of use.
+                While we organize and structure publicly available information, underlying content remains subject to original publishers' copyrights and terms of use.
               </p>
             </div>
           </section>
 
           <section>
-            <h2 className="text-3xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+            <h2 className="text-2xl font-black tracking-tight text-black mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               Contact
             </h2>
-            <div className="space-y-4 text-black font-mono text-base leading-relaxed">
+            <div className="space-y-3 text-black font-mono text-sm leading-relaxed text-justify">
               <p>
-                For questions, concerns, or submissions regarding our policies, documentation process, or specific documented events, please visit our report page or contact us through the channels listed on our about page.
+                Questions, concerns, or submissions regarding policies, documentation processes, or specific events may be directed to our report page or through channels listed on our about page.
               </p>
             </div>
           </section>
